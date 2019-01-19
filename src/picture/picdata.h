@@ -1,0 +1,97 @@
+#ifndef __PICDATA_H__
+#define __PICDATA_H__
+
+struct PictureHeader
+{
+    PictureHeader();
+    void ResetData(void);
+    
+    enum {
+        PIC_CODING_TYPE_I = 1,
+        PIC_CODING_TYPE_P = 2,
+        PIC_CODING_TYPE_B = 3,
+        PIC_CODING_TYPE_D = 4
+    };
+    
+    uint32_t temporal_reference   : 10;
+    uint32_t picture_coding_type  : 3;
+    uint32_t vbv_delay            : 16;
+    uint32_t full_pel_forw_vector : 1;
+    uint32_t forw_f_code          : 3;
+    uint32_t full_pel_back_vector : 1;
+    uint32_t back_f_code          : 3;
+    uint32_t extra_bit_pict       : 1;
+    uint32_t extra_info_pict      : 8;
+};
+
+struct PictureCodingExtension
+{
+    PictureCodingExtension();
+    void ResetData(void);
+    
+    uint32_t f_code_forw_horz     : 4;
+    uint32_t f_code_forw_vert     : 4;
+    uint32_t f_code_back_horz     : 4;
+    uint32_t f_code_back_vert     : 4;
+    uint32_t intra_dc_prec        : 2;
+    uint32_t picture_struct       : 2;
+    uint32_t top_field_first      : 1;
+    uint32_t frame_pred_frame_dct : 1;
+    uint32_t concealment_mot_vecs : 1;
+    uint32_t q_scale_type         : 1;
+    uint32_t intra_vlc_format     : 1;
+    uint32_t alternate_scan       : 1;
+    uint32_t repeat_first_field   : 1;
+    uint32_t chroma_420_type      : 1;
+    uint32_t progressive_frame    : 1;
+    uint32_t composite_display    : 1;
+    uint32_t v_axis               : 1;
+    uint32_t field_sequence       : 3;
+    uint32_t sub_carrier          : 1;
+    uint32_t burst_amplitude      : 7;
+    uint32_t sub_carrier_phase    : 8;
+};
+
+struct SliceData
+{
+    SliceData();
+    void ResetData();
+    
+    uint32_t slice_vertical_position_ext : 3;
+};
+
+struct PictureData
+{
+    PictureData();
+    void NullPictureData(void);
+    
+    struct PictureHeader          picHdr;
+    struct PictureCodingExtension picCodingExt;
+    struct SliceData              sliceData;
+};
+
+class PictureDataMgr
+{
+public:
+    PictureDataMgr(StreamState& ss);
+    ~PictureDataMgr();
+    
+    static PictureDataMgr* GetPictureDataMgr(StreamState& ss);
+    void                   ReleasePictureDataMgr(void);
+    PictureData*           GetNextBuffer(void);
+    PictureData*           GetBackBuffer(void) {return _backBuf;}
+    PictureData*           GetFrontBuffer(void) {return _frontBuf;}
+    
+private:
+    PictureDataMgr(const PictureDataMgr&);
+    PictureDataMgr& operator=(const PictureDataMgr&);
+    
+    static PictureDataMgr* _PictureDataMgr;
+    
+    PictureData*           _frontBuf;
+    PictureData*           _backBuf;
+    StreamState&           _strmState;
+};
+
+#endif
+

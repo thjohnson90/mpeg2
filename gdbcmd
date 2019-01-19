@@ -1,0 +1,4 @@
+tty /dev/pts/1
+set args centaur_2.mpg
+break main
+
