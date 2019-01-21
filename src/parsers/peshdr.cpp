@@ -68,7 +68,7 @@ uint32_t PesHeaderParser::ParsePesPacket(void)
         _streamState.pesHdr.ext.PES_header_data_len      = _bitBuffer.GetBits(8);
         
         // check for PTS/DTS
-        if (0x02 == (_streamState.pesHdr.ext.PTS_DTS_flags & 0x02)) {
+        if (0x02 == _streamState.pesHdr.ext.PTS_DTS_flags) {
             marker                           = _bitBuffer.GetBits(4);
             if (0x02 == _streamState.pesHdr.ext.PTS_DTS_flags) {
                 CHECK_VALUE_AND_BREAK(2, marker, status, -1);
@@ -88,7 +88,21 @@ uint32_t PesHeaderParser::ParsePesPacket(void)
         
         if (0x03 == _streamState.pesHdr.ext.PTS_DTS_flags) {
             marker                           = _bitBuffer.GetBits(4);
+            CHECK_VALUE_AND_BREAK(3, marker, status, -1);
+
+            _streamState.pesHdr.ext.PTS32_30 = _bitBuffer.GetBits(3);
+            marker                           = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+            _streamState.pesHdr.ext.PTS29_15 = _bitBuffer.GetBits(15);
+            marker                           = _bitBuffer.GetBits(1);
+            CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+            _streamState.pesHdr.ext.PTS14_00 = _bitBuffer.GetBits(15);
+            marker                           = _bitBuffer.GetBits(1);
+            CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+
+            marker                           = _bitBuffer.GetBits(4);
+            CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+
             _streamState.pesHdr.ext.DTS32_30 = _bitBuffer.GetBits(3);
             marker                           = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
@@ -129,6 +143,7 @@ uint32_t PesHeaderParser::ParsePesPacket(void)
         
         // check for DSM trick mode - not used by DVD
         if (1 == _streamState.pesHdr.ext.DSM_trick_mode_flag) {
+	    // TODO: fill in
         }
         
         // check for additional copy info
@@ -154,11 +169,11 @@ uint32_t PesHeaderParser::ParsePesPacket(void)
         }
         
         // if PES_private_data_flag is set, an additional 16 bytes of user defined date is appended
-        // not supported
+        // TODO: add support for private data
         CHECK_VALUE_AND_BREAK(0, _streamState.pesHdr.ext.PES_private_data_flag, status, -1);
         
         // if pack_header_field_flag is set, an additional 8 bits of pack field length value is appended
-        // not supported
+        // TODO: add support for pack_header_flag
         CHECK_VALUE_AND_BREAK(0, _streamState.pesHdr.ext.pack_header_field_flag, status, -1);
         
         // check for program sequence counter
@@ -181,6 +196,7 @@ uint32_t PesHeaderParser::ParsePesPacket(void)
         }
         
         // check for PES extension flag 2
+	// TODO: neds to be corrected
         if (1 == _streamState.pesHdr.ext.PES_ext_flag2) {
             marker                                    = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
