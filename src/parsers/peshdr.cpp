@@ -205,8 +205,8 @@ uint32_t PesHeaderParser::ParsePesPadding(void)
                 break;
             }
             
-            status = _bitBuffer.GetBytes(buf, _streamState.pesHdr.packet_len + 1);  // add one for null termination
-            
+	    // add one for null termination
+            status = _bitBuffer.GetBytes(buf, _streamState.pesHdr.packet_len + 1);
             delete [] buf;
         }
     } while (0);
@@ -226,9 +226,9 @@ uint32_t PesHeaderParser::ParsePesDataBytes(void)
                 status = -1;
                 break;
             }
-            
-            status = _bitBuffer.GetBytes(buf, _streamState.pesHdr.packet_len + 1);  // add one for null termination
-            
+
+	    // add one for null termination
+            status = _bitBuffer.GetBytes(buf, _streamState.pesHdr.packet_len + 1);
             delete [] buf;
         }
     } while (0);

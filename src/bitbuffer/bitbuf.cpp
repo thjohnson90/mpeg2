@@ -14,9 +14,9 @@ BitBuffer::BitBuffer() : _bitBuf(0), _bitBufCnt(0)
 
 uint8_t BitBuffer::GetNextStartCode(void)
 {
-    uint8_t startCode = 0;
-    bool startCodeFound     = false;
-    parseState              = START0;
+    uint8_t startCode      = 0;
+    bool    startCodeFound = false;
+    parseState             = START0;
     
     do {
         startCode = GetByte();
@@ -71,26 +71,31 @@ uint8_t BitBuffer::GetNextStartCode(void)
     return startCode;
 }
 
-bool BitBuffer::PeekStartCodePrefix(void)
+bool BitBuffer::PeekStartCodePrefix(uint32_t& status)
 {
     bool startPrefixFound = false;
     
-    FillBitBuffer();
-    
-    uint64_t tmp = _bitBuf;
-    tmp >>= 40;
-    if (1 == tmp) {
-        startPrefixFound = true;
-    }
-    
+    do {
+	status = FillBitBuffer();
+	if (0 > status) {
+	    break;
+	}
+
+	uint64_t tmp = _bitBuf;
+	tmp >>= 40;
+	if (1 == tmp && 24 <= GetBitCount()) {
+	    startPrefixFound = true;
+	}
+    } while (0);
+
     return startPrefixFound;
 }
 
-uint8_t BitBuffer::PeekNextStartCode(void)
+int8_t BitBuffer::PeekNextStartCode(uint32_t& status)
 {
-    uint8_t sc = 0;
+    uint8_t sc = -1;
     
-    if (PeekStartCodePrefix()) {
+    if (PeekStartCodePrefix(status)) {
 	uint64_t tmp = _bitBuf;
 
 	sc = (tmp >>= 32);

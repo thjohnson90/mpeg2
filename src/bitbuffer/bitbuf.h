@@ -9,14 +9,14 @@ public:
     uint8_t  GetNextStartCode(void);
     uint32_t GetBitCount(void) {return _bitBufCnt;}
     uint8_t  GetLastStartCode(void) {return _lastStartCode;}
-    bool     PeekStartCodePrefix(void);
-    uint8_t  PeekNextStartCode(void);
+    bool     PeekStartCodePrefix(uint32_t& status);
+    int8_t   PeekNextStartCode(uint32_t& status);
     
-    virtual uint32_t GetByte(void)                        = 0;
-    virtual uint32_t GetBytes(uint8_t* buf, uint32_t len) = 0;
-    virtual uint32_t GetBits(uint32_t bitCnt)             = 0;
-    virtual uint32_t PeekBits(uint32_t bitCnt)            = 0;
-    virtual uint32_t FillBitBuffer(void)                  = 0;
+    virtual uint32_t GetByte(void)                               = 0;
+    virtual uint32_t GetBytes(uint8_t* buf, uint32_t len)        = 0;
+    virtual uint32_t GetBits(uint32_t bitCnt)                    = 0;
+    virtual uint32_t PeekBits(uint32_t bitCnt, uint32_t& status) = 0;
+    virtual uint32_t FillBitBuffer(void)                         = 0;
     
     static const uint32_t BITS_IN_BYTE;
     static const uint32_t MAX_BITS_IN_BUF;

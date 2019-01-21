@@ -213,12 +213,41 @@ uint32_t SeqExtParser::ParsePictureDispExt(void)
     uint32_t num_off = 0;
     uint32_t i       = 0;
 
-    // _streamState.extData.seqExt.progressive_seq
-    // TODO: Need to finish off additional parsing data structure so algo
-    // for calculating num_off can be complete.
-    // see page 79 in iso13818-2
-
     do {
+        PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(_streamState);
+        if (0 == picDataMgr) {
+            status = -1;
+            break;
+        }
+        PictureData* picData = picDataMgr->GetBackBuffer();
+	if (0 == picData) {
+	    status = -1;
+	    break;
+	}
+
+	if (1 == _streamState.extData.seqExt.progressive_seq) {
+	    if (1 == picData->picCodingExt.repeat_first_field) {
+		if (1 == picData->picCodingExt.top_field_first) {
+		    num_off = 3;
+		} else {
+		    num_off = 2;
+		}
+	    } else {
+		num_off = 1;
+	    }
+	} else {
+	    if (picData->picCodingExt.picture_struct == PictureCodingExtension::PIC_STRUCT_TOP_FIELD ||
+		picData->picCodingExt.picture_struct == PictureCodingExtension::PIC_STRUCT_BOT_FIELD) {
+		num_off = 1;
+	    } else {
+		if (1 == picData->picCodingExt.repeat_first_field) {
+		    num_off = 3;
+		} else {
+		    num_off = 2;
+		}
+	    }
+	}
+
 	for (i = 0; i < num_off; i++) {
 	    _streamState.extData.pictDispExt.data[i].frm_center_horz_off = _bitBuffer.GetBits(16);
 	    marker = _bitBuffer.GetBits(1);

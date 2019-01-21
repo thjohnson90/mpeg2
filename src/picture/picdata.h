@@ -12,7 +12,7 @@ struct PictureHeader
         PIC_CODING_TYPE_B = 3,
         PIC_CODING_TYPE_D = 4
     };
-    
+
     uint32_t temporal_reference   : 10;
     uint32_t picture_coding_type  : 3;
     uint32_t vbv_delay            : 16;
@@ -29,6 +29,12 @@ struct PictureCodingExtension
     PictureCodingExtension();
     void ResetData(void);
     
+    enum {
+	PIC_STRUCT_TOP_FIELD = 1,
+	PIC_STRUCT_BOT_FIELD = 2,
+	PIC_STRUCT_FRAME     = 3
+    };
+
     uint32_t f_code_forw_horz     : 4;
     uint32_t f_code_forw_vert     : 4;
     uint32_t f_code_back_horz     : 4;

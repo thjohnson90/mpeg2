@@ -17,11 +17,13 @@ uint32_t UserDataParser::ParseUserData(void)
     uint8_t  byte   = 0;
 
     do {
-	while (!_bitBuffer.PeekStartCodePrefix()) {
+	while (!_bitBuffer.PeekStartCodePrefix(status)) {
 	    byte = _bitBuffer.GetByte();
 	}
 
-	_bitBuffer.GetNextStartCode();
+	if (0 <= status) {
+	    _bitBuffer.GetNextStartCode();
+	}
     } while (0);
     
     return status;

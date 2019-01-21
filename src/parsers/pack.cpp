@@ -43,9 +43,7 @@ uint32_t PackHdrParser::ParsePackHdr(void)
             uint8_t* pBuf = new uint8_t[_streamState.packHdr.PackStuffingLen];
 
             status = _bitBuffer.GetBytes(pBuf, _streamState.packHdr.PackStuffingLen);
-            if (-1 == status) {
-                break;
-            }
+	    delete [] pBuf;
         }
     } while (0);
     

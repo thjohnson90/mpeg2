@@ -1,4 +1,7 @@
 tty /dev/pts/1
-set args centaur_2.mpg
+set args ../sn1987a_2.mpeg
 break main
+break base_parser.cpp:109
+break picture.cpp:112
+run
 

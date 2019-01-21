@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdint.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -73,7 +74,6 @@ uint32_t BaseParser::Initialize(void)
 uint32_t BaseParser::ParseVideoSequence(void)
 {
     uint32_t status = 0;
-    uint32_t loops  = 20;
     
     do
     {
@@ -114,7 +114,6 @@ uint32_t BaseParser::ParseVideoSequence(void)
 		CHECK_PARSE(ParseMPEG2Stream(), status);
 	    } else {
 		// This is an MPEG1 stream
-		loops = 1;
 		status = -1;
 	    }
 	    
@@ -130,7 +129,7 @@ uint32_t BaseParser::ParseVideoSequence(void)
 	    }
             break;
         }
-    } while (--loops > 0);
+    } while (0 <= status && StreamState::sequence_end != _bitBuffer.GetLastStartCode());
     
     return status;
 }
@@ -142,26 +141,43 @@ uint32_t BaseParser::ParseMPEG2Stream(void)
     do {
 	do {
 	    CHECK_PARSE(ParseExtensionUserData(0), status);
-	    if (0 > status) {
-		break;
-	    }
 	    
 	    do {
 		if (_bitBuffer.GetLastStartCode() == StreamState::group_start) {
 		    CHECK_PARSE(_gopParser->ParseGopHdr(), status);
 		    CHECK_PARSE(ParseExtensionUserData(1), status);
 		}
-		CHECK_PARSE(_picParser->ParsePictureHdr(), status);
-		CHECK_PARSE(_picParser->ParsePictCodingExt(), status);
+
+		if (_bitBuffer.GetLastStartCode() == StreamState::picture_start) {
+		    CHECK_PARSE(_picParser->ParsePictureHdr(), status);
+		}
+
+		if (_bitBuffer.GetLastStartCode() == StreamState::extension_start) {
+		    CHECK_PARSE(_picParser->ParsePictCodingExt(), status);
+		}
 		CHECK_PARSE(ParseExtensionUserData(2), status);
 		CHECK_PARSE(_picParser->ParsePictData(), status);
-		// picture_data()
 	    } while ((_bitBuffer.GetLastStartCode() == StreamState::picture_start) ||
 		     (_bitBuffer.GetLastStartCode() == StreamState::group_start));
 
-	    if (_bitBuffer.GetLastStartCode() != StreamState::sequence_end) {
+	    if (0 > status) {
+	      break;
+	    }
+
+	    if (_bitBuffer.GetLastStartCode() == StreamState::sequence_header) {
 		CHECK_PARSE(_seqHdrParser->ParseSequenceHdr(), status);
 		CHECK_PARSE(_seqExtParser->ParseSequenceExt(), status);
+	    }
+
+	    if (_bitBuffer.GetLastStartCode() == StreamState::pack_header) {
+		CHECK_PARSE(_packHdrParser->ParsePackHdr(), status);
+		assert(StreamState::pes_video_stream_min == _bitBuffer.GetNextStartCode());
+		CHECK_PARSE(_pesHdrParser->ParsePesHdr(), status);
+		_bitBuffer.GetNextStartCode();
+	    }
+
+	    if (_bitBuffer.GetLastStartCode() == StreamState::extension_start) {
+		CHECK_PARSE(_picParser->ParsePictCodingExt(), status);
 	    }
 	} while (_bitBuffer.GetLastStartCode() != StreamState::sequence_end);
 	

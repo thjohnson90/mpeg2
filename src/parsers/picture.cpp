@@ -1,4 +1,6 @@
+#include <iostream>
 #include <stdint.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -43,11 +45,15 @@ uint32_t PictureParser::ParsePictureHdr(void)
             picData->picHdr.back_f_code = _bitBuffer.GetBits(3);
         }
         
-        while (1 == _bitBuffer.PeekBits(1)) {
+        while (1 == _bitBuffer.PeekBits(1, status) && 0 <= status) {
 	    picData->picHdr.extra_bit_pict  = _bitBuffer.GetBits(1);
             picData->picHdr.extra_info_pict = _bitBuffer.GetBits(8);
 	    // TODO: do something with extra_info_pict data
         }
+	if (0 > status) {
+	    break;
+	}
+
 	picData->picHdr.extra_bit_pict = _bitBuffer.GetBits(1);
 
 	_bitBuffer.GetNextStartCode();
@@ -75,6 +81,7 @@ uint32_t PictureParser::ParsePictCodingExt(void)
 
 	// get the extension start code identifier
 	uint8_t sc = _bitBuffer.GetBits(4);
+	assert(PictureParser::PICT_CODING_EXT_ID == sc);
 	
         picData->picCodingExt.f_code_forw_horz      = _bitBuffer.GetBits(4);
         picData->picCodingExt.f_code_forw_vert      = _bitBuffer.GetBits(4);
@@ -109,15 +116,16 @@ uint32_t PictureParser::ParsePictCodingExt(void)
 uint32_t PictureParser::ParsePictData(void)
 {
     uint32_t status = 0;
+    uint8_t  sc     = 0;
 
     do {
 	do {
 	    // slice()
-	    _bitBuffer.GetByte();
-	} while ((StreamState::slice_start_min < _bitBuffer.PeekNextStartCode()) &&
-		 (StreamState::slice_start_max >= _bitBuffer.PeekNextStartCode()));
 
-	_bitBuffer.GetNextStartCode();
+	    sc = _bitBuffer.GetNextStartCode();
+	} while ((StreamState::slice_start_min < sc) &&
+		  (StreamState::slice_start_max >= sc));
+//	_bitBuffer.GetNextStartCode();
     } while (0);
 
     return status;

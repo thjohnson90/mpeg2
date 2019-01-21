@@ -12,11 +12,7 @@ SeqHdrParser::SeqHdrParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _st
 
 uint32_t SeqHdrParser::LoadQuantMatrix(uint8_t (&q)[65])
 {
-    uint32_t status = 0;
-    
-    _bitBuffer.GetBytes(q, 65);
-    
-    return status;
+    return _bitBuffer.GetBytes(q, 65);
 }
 
 uint32_t SeqHdrParser::ParseSequenceHdr(void)
@@ -37,12 +33,18 @@ uint32_t SeqHdrParser::ParseSequenceHdr(void)
         _streamState.seqHdr.load_intra_quant_matrix = _bitBuffer.GetBits(1);
         if (1 == _streamState.seqHdr.load_intra_quant_matrix) {
             // load the intra_quantization_matrix
-            LoadQuantMatrix(_streamState.seqHdr.intra_quant_matrix);
+            status = LoadQuantMatrix(_streamState.seqHdr.intra_quant_matrix);
+	    if (0 > status) {
+		break;
+	    }
         }
         _streamState.seqHdr.load_non_intra_quant_matrix = _bitBuffer.GetBits(1);
         if (1 == _streamState.seqHdr.load_non_intra_quant_matrix) {
             // load the non_intra_quantization_matrix
-            LoadQuantMatrix(_streamState.seqHdr.non_intra_quant_matrix);
+            status = LoadQuantMatrix(_streamState.seqHdr.non_intra_quant_matrix);
+	    if (0 > status) {
+		break;
+	    }
         }
 
 	_bitBuffer.GetNextStartCode();
