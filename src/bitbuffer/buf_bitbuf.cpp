@@ -42,23 +42,20 @@ uint32_t BufBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
             index++;
         }
 
-	// if we need more bytes read directly from the file
+	if (len > (size - offset)) {
+	    // not enough bytes left in buffer to satisfy request
+	    status = -1;
+	    break;
+	}
+
+	// if we need more bytes read directly from the buffer
 	if (0 != len) {
-
-//	    {
-//		int l = _inFile.tellg();
-//		if (-1 == l) throw;
-//		cout << "Offset 0x" << hex << l << '\r';
-//		if (0x6b5fff == l) {
-//		    cout << "EOF" << endl;
-//		}
-//	    }
-
-//	    _inFile.get(reinterpret_cast<char*>(&buf[index]), len);
-	    // if we got here the bit buffer is empty (GetBitCount() will return 0)
-//	    if (_inFile.eof()) {
-//		status = -1;
-//	    }
+	    do {
+		buf[index] = _rawBuf[_offset];
+		index++;
+		_offset++;
+		len--;
+	    } while (0 != len);
 	}
     } while (0);
     
@@ -120,38 +117,35 @@ uint32_t BufBitBuffer::FillBitBuffer()
     uint32_t status    = 0;
     uint32_t newBitCnt = 0;
     uint64_t tmpBuf    = 0ULL;
-    
-    while ((_bitBufCnt + newBitCnt + BITS_IN_BYTE) <= BitBuffer::MAX_BITS_IN_BUF)
-    {
-#if 0
-      if (!_inFile.eof()) {
-	    // there is at least one more byte available in the file
-	    tmpBuf <<= BITS_IN_BYTE;
 
-	    {
-		int l = _inFile.tellg();
-		if (-1 == l) throw;
-		cout << "Offset 0x" << hex << l << '\r';
-		if (0x6b5fff == l) {
-		    cout << "EOF" << endl;
-		}
-	    }
-
-	    tmpBuf |= static_cast<uint64_t>(_inFile.get());
-	    newBitCnt += BITS_IN_BYTE;
-	} else {
-	    // there are no bytes available in the file
-	    if (0 >= GetBitCount()) {
-		// no bytes available in the file and not bits in the bit buffer
-		status = -1;
-	    }
+    do {
+	if (0 == (_size - _offset)) {
+	    // buffer is empty
+	    status = -1;
 	    break;
 	}
-#endif
-    }
-    
-    _bitBuf |= (tmpBuf << (MAX_BITS_IN_BUF - _bitBufCnt - newBitCnt));
-    _bitBufCnt += newBitCnt;
+
+	while ((_bitBufCnt + newBitCnt + BITS_IN_BYTE) <= BitBuffer::MAX_BITS_IN_BUF)
+	{
+	    if (0 != (_size - _offset)) {
+		// there is at least one more byte available in the file
+		tmpBuf <<= BITS_IN_BYTE;
+		tmpBuf |= static_cast<uint64_t>(_rawBuf[_offset]);
+		newBitCnt += BITS_IN_BYTE;
+		_offset++;
+	    } else {
+		// there are no bytes available in the buffer
+		if (0 >= _bitBufCnt + newBitCnt) {
+		    // no bytes available in the file and not bits in the bit buffer
+		    status = -1;
+		}
+		break;
+	    }
+	}
+
+	_bitBuf |= (tmpBuf << (MAX_BITS_IN_BUF - _bitBufCnt - newBitCnt));
+	_bitBufCnt += newBitCnt;
+    } while (0);
     
     return status;
 }
@@ -178,3 +172,14 @@ uint8_t* BufBitBuffer::GetEmptyBuffer(uint32_t sz)
 
     return pbuf;
 }
+
+uint32_t BufBitBuffer::ParseMPEG2Stream(void)
+{
+    uint32_t status = 0;
+
+    do {
+    } while (0);
+
+    return status;
+}
+

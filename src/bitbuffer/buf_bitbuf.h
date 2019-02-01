@@ -14,6 +14,7 @@ public:
     virtual uint32_t FillBitBuffer(void);
 
     uint8_t* GetEmptyBuffer(uint32_t sz);
+    uint32_t ParseMPEG2Stream(void);
     
 private:
     uint8_t*  _rawBuf;

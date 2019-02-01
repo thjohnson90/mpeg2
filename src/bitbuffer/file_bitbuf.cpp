@@ -121,7 +121,7 @@ uint32_t FileBitBuffer::FillBitBuffer()
 	    newBitCnt += BITS_IN_BYTE;
 	} else {
 	    // there are no bytes available in the file
-	    if (0 >= _bitBufCnt) {
+	    if (0 >= _bitBufCnt + newBitCnt) {
 		// no bytes available in the file and not bits in the bit buffer
 		status = -1;
 	    }
