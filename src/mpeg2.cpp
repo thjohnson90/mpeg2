@@ -47,6 +47,7 @@ int main(int argc, char** argv)
 	
  	StreamState streamState;
 	FileBitBuffer fileBitBuf(inFile);
+
 	BaseParser parser(fileBitBuf, streamState);
 	if (0 > parser.Initialize()) {
 	    cout << "Parser initialization error!" << endl;

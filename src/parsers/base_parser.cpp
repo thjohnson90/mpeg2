@@ -21,21 +21,14 @@ BaseParser::BaseParser(BitBuffer& bb, StreamState& ss) :
     _bitBuffer(bb), _streamState(ss), _packHdrParser(nullptr),
     _systemHdrParser(nullptr), _pesHdrParser(nullptr),
     _seqHdrParser(nullptr), _seqExtParser(nullptr),
-    _userDataParser(0), _gopParser(0), _picParser(0), _sliceParser(0)
+    _userDataParser(nullptr), _gopParser(nullptr),
+    _picParser(nullptr), _sliceParser(nullptr)
 {
 }
 
 BaseParser::~BaseParser()
 {
-    delete _packHdrParser;   _packHdrParser   = nullptr;
-    delete _systemHdrParser; _systemHdrParser = nullptr;
-    delete _pesHdrParser;    _pesHdrParser    = nullptr;
-    delete _seqHdrParser;    _seqHdrParser    = nullptr;
-    delete _seqExtParser;    _seqExtParser    = nullptr;
-    delete _userDataParser;  _userDataParser  = nullptr;
-    delete _gopParser;       _gopParser       = nullptr;
-    delete _picParser;       _picParser       = nullptr;
-    delete _sliceParser;     _sliceParser     = nullptr;
+    Destroy();
 }
 
 uint32_t BaseParser::Initialize(void)
@@ -54,21 +47,26 @@ uint32_t BaseParser::Initialize(void)
 	    _picParser       = GetPictureParser();
 	    _sliceParser     = GetSliceParser();
 	} catch (std::bad_alloc) {
-	    delete _packHdrParser;   _packHdrParser   = nullptr;
-	    delete _systemHdrParser; _systemHdrParser = nullptr;
-	    delete _pesHdrParser;    _pesHdrParser    = nullptr;
-	    delete _seqHdrParser;    _seqHdrParser    = nullptr;
-	    delete _seqExtParser;    _seqExtParser    = nullptr;
-	    delete _userDataParser;  _userDataParser  = nullptr;
-	    delete _gopParser;       _gopParser       = nullptr;
-	    delete _picParser;       _picParser       = nullptr;
-	    delete _sliceParser;     _sliceParser     = nullptr;
+	    Destroy();
 	    
 	    status = -1;
 	}
     }
 
     return status;
+}
+
+uint32_t BaseParser::Destroy(void)
+{
+    delete _packHdrParser;   _packHdrParser   = nullptr;
+    delete _systemHdrParser; _systemHdrParser = nullptr;
+    delete _pesHdrParser;    _pesHdrParser    = nullptr;
+    delete _seqHdrParser;    _seqHdrParser    = nullptr;
+    delete _seqExtParser;    _seqExtParser    = nullptr;
+    delete _userDataParser;  _userDataParser  = nullptr;
+    delete _gopParser;       _gopParser       = nullptr;
+    delete _picParser;       _picParser       = nullptr;
+    delete _sliceParser;     _sliceParser     = nullptr;
 }
 
 uint32_t BaseParser::ParseVideoSequence(void)
@@ -106,6 +104,9 @@ uint32_t BaseParser::ParseVideoSequence(void)
             break;
 
         case StreamState::sequence_header:
+	    //
+	    // _streamState.pesHdr.packet_len contains the PES packet length
+	    //
             CHECK_PARSE(_seqHdrParser->ParseSequenceHdr(), status);
 	    if (StreamState::extension_start == _bitBuffer.GetLastStartCode())
 	    {
@@ -203,16 +204,6 @@ uint32_t BaseParser::ParseExtensionUserData(uint32_t flag)
     } while(0);
 
     return status;
-}
-
-uint32_t BaseParser::GetByte(uint32_t byteCnt)
-{
-    return _bitBuffer.GetByte();
-}
-
-uint32_t BaseParser::GetBits(uint32_t bitCnt)
-{
-    return _bitBuffer.GetBits(bitCnt);
 }
 
 PackHdrParser* BaseParser::GetPackHdrParser(void)

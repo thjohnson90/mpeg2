@@ -43,6 +43,21 @@ uint32_t SeqExtParser::ParseExtensionData(uint32_t flag)
     
     do {
 	while (_bitBuffer.GetLastStartCode() == StreamState::extension_start) {
+	    sc = _bitBuffer.PeekBits(4, status);
+	    if (-1 == status) {
+		break;
+	    }
+
+	    if (seq_display_ext != sc &&
+		seq_scalable_ext != sc &&
+		quant_matrix_ext != sc &&
+		copyright_ext != sc &&
+		pict_display_ext != sc &&
+		pict_spatial_scalable_ext != sc &&
+		pict_temporal_scalable_ext != sc) {
+		break;
+	    }
+
 	    if (0 == flag) {
 		sc = _bitBuffer.GetBits(ext_start_code_id_size);
 		if (seq_display_ext == sc) {

@@ -83,7 +83,7 @@ bool BitBuffer::PeekStartCodePrefix(uint32_t& status)
 
 	uint64_t tmp = _bitBuf;
 	tmp >>= 40;
-	if (1 == tmp && 24 <= GetBitCount()) {
+	if (1 == tmp && 24 <= _bitBufCnt) {
 	    startPrefixFound = true;
 	}
     } while (0);

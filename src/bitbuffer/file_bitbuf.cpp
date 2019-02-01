@@ -35,7 +35,7 @@ uint32_t FileBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
         }
 
 	// use up bits in the bit buffer first
-        while (0 != GetBitCount() && 0 < len)
+        while (BITS_IN_BYTE <= _bitBufCnt && 0 != len)
         {
             buf[index] = GetByte();
             len--;
@@ -43,17 +43,7 @@ uint32_t FileBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
         }
 
 	// if we need more bytes read directly from the file
-	if (0 < len) {
-
-	    {
-		int l = _inFile.tellg();
-		if (-1 == l) throw;
-		cout << "Offset 0x" << hex << l << '\r';
-		if (0x6b5fff == l) {
-		    cout << "EOF" << endl;
-		}
-	    }
-
+	if (0 != len) {
 	    _inFile.get(reinterpret_cast<char*>(&buf[index]), len);
 	    // if we got here the bit buffer is empty (GetBitCount() will return 0)
 	    if (_inFile.eof()) {
@@ -83,9 +73,10 @@ uint32_t FileBitBuffer::GetBits(uint32_t bitCnt)
         }
         
         uint64_t mask = (1 << bitCnt) - 1;
-        tmp = _bitBuf;
+	tmp = _bitBuf;
         tmp >>= (MAX_BITS_IN_BUF - bitCnt);
         tmp &= mask;
+
         _bitBuf <<= bitCnt;
         _bitBufCnt -= bitCnt;
     } while (0);
@@ -107,7 +98,7 @@ uint32_t FileBitBuffer::PeekBits(uint32_t bitCnt, uint32_t& status)
         }
         
         uint64_t mask = (1 << bitCnt) - 1;
-        bits = _bitBuf;
+	bits = _bitBuf;
         bits >>= (MAX_BITS_IN_BUF - bitCnt);
         bits &= mask;
     } while (0);
@@ -126,21 +117,11 @@ uint32_t FileBitBuffer::FillBitBuffer()
 	if (!_inFile.eof()) {
 	    // there is at least one more byte available in the file
 	    tmpBuf <<= BITS_IN_BYTE;
-
-	    {
-		int l = _inFile.tellg();
-		if (-1 == l) throw;
-		cout << "Offset 0x" << hex << l << '\r';
-		if (0x6b5fff == l) {
-		    cout << "EOF" << endl;
-		}
-	    }
-
 	    tmpBuf |= static_cast<uint64_t>(_inFile.get());
 	    newBitCnt += BITS_IN_BYTE;
 	} else {
 	    // there are no bytes available in the file
-	    if (0 >= GetBitCount()) {
+	    if (0 >= _bitBufCnt) {
 		// no bytes available in the file and not bits in the bit buffer
 		status = -1;
 	    }

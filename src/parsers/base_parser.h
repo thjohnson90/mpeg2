@@ -8,11 +8,10 @@ public:
     ~BaseParser();
     
     uint32_t Initialize(void);
+    uint32_t Destroy(void);
     uint32_t ParseVideoSequence(void);
     uint32_t ParseMPEG2Stream(void);
     uint32_t ParseExtensionUserData(uint32_t flag);
-    uint32_t GetByte(uint32_t byteCnt);
-    uint32_t GetBits(uint32_t bitCnt);
     
 protected:
     PackHdrParser*    GetPackHdrParser(void);

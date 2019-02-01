@@ -7,7 +7,6 @@ public:
     BitBuffer();
     
     uint8_t  GetNextStartCode(void);
-    uint32_t GetBitCount(void) {return _bitBufCnt;}
     uint8_t  GetLastStartCode(void) {return _lastStartCode;}
     bool     PeekStartCodePrefix(uint32_t& status);
     int8_t   PeekNextStartCode(uint32_t& status);
