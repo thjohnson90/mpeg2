@@ -235,7 +235,7 @@ gop::gop() :
 StreamState::StreamState()
     
 {
-    for (int i = 0; i < 65; i++) {
+    for (int i = 0; i < 64; i++) {
         seqHdr.intra_quant_matrix[i]     = 0;
         seqHdr.non_intra_quant_matrix[i] = 0;
     }

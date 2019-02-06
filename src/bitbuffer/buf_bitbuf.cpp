@@ -2,13 +2,35 @@
 #include <fstream>
 #include <stdint.h>
 
+#include "stream.h"
+#include "bitbuf.h"
+#include "pack.h"
+#include "syshdr.h"
+#include "peshdr.h"
+#include "sequence.h"
+#include "extension.h"
+#include "user.h"
+#include "gop.h"
+#include "picture.h"
+#include "slice.h"
+#include "base_parser.h"
+
 using namespace std;
 
 #include "bitbuf.h"
 #include "buf_bitbuf.h"
 
-BufBitBuffer::BufBitBuffer() : BitBuffer(), _rawBuf(0), _size(0), _offset(0)
+BufBitBuffer::BufBitBuffer() :
+    BitBuffer(), _rawBuf(0), _size(0), _offset(0), _bparser(nullptr)
 {
+}
+
+BufBitBuffer::~BufBitBuffer()
+{
+    delete [] _rawBuf;
+    _rawBuf = nullptr;
+    _size   = 0;
+    _offset = 0;
 }
 
 uint32_t BufBitBuffer::GetByte(void)
@@ -42,7 +64,7 @@ uint32_t BufBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
             index++;
         }
 
-	if (len > (size - offset)) {
+	if (len > (_size - _offset)) {
 	    // not enough bytes left in buffer to satisfy request
 	    status = -1;
 	    break;
@@ -73,7 +95,7 @@ uint32_t BufBitBuffer::GetBits(uint32_t bitCnt)
 //	}
 	
         if (_bitBufCnt < bitCnt) {
-            if (0 > FillBitBuffer()) {
+            if (-1 == FillBitBuffer()) {
 		// reached eof and bit buffer is empty
 		break;
 	    }
@@ -96,7 +118,7 @@ uint32_t BufBitBuffer::PeekBits(uint32_t bitCnt, uint32_t& status)
     
     do {
         if (bitCnt > _bitBufCnt) {
-            if (0 > FillBitBuffer()) {
+            if (-1 == FillBitBuffer()) {
 		// reached eof and bit buffer is empty
 		status = -1;
 		break;
@@ -121,8 +143,15 @@ uint32_t BufBitBuffer::FillBitBuffer()
     do {
 	if (0 == (_size - _offset)) {
 	    // buffer is empty
-	    status = -1;
-	    break;
+	    if (!_bparser->GetCallbackState()) {
+		_bparser->SetCallbackState();
+		status = _bparser->ParseVideoSequence();
+		_bparser->SetCallbackState(false);
+	    }
+	    if (-1 == status || _bparser->GetCallbackState()) {
+		status = -1;
+		break;
+	    }
 	}
 
 	while ((_bitBufCnt + newBitCnt + BITS_IN_BYTE) <= BitBuffer::MAX_BITS_IN_BUF)
@@ -155,14 +184,18 @@ uint8_t* BufBitBuffer::GetEmptyBuffer(uint32_t sz)
     uint8_t* pbuf = nullptr;
     
     do {
-	if (nullptr != _rawBuf || 0 != _size) {
+	if (nullptr != _rawBuf && sz != _size) {
 	    delete [] _rawBuf;
-	    _size = 0;
+	    _rawBuf = nullptr;
+	    _size   = 0;
+	    _offset = 0;
 	}
 
-	_rawBuf = new uint8_t[sz];
 	if (nullptr == _rawBuf) {
-	    break;
+	    _rawBuf = new uint8_t[sz];
+	    if (nullptr == _rawBuf) {
+		break;
+	    }
 	}
 
 	_size   = sz;
@@ -172,14 +205,3 @@ uint8_t* BufBitBuffer::GetEmptyBuffer(uint32_t sz)
 
     return pbuf;
 }
-
-uint32_t BufBitBuffer::ParseMPEG2Stream(void)
-{
-    uint32_t status = 0;
-
-    do {
-    } while (0);
-
-    return status;
-}
-

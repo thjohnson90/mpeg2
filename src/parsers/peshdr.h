@@ -7,6 +7,17 @@ public:
     PesHeaderParser(BitBuffer& bb, StreamState& ss);
     uint32_t ParsePesHdr(void);
     
+private:
+    BitBuffer&   _bitBuffer;
+    StreamState& _streamState;
+};
+
+class PesPacketParser
+{
+public:
+    PesPacketParser(BitBuffer& bb, StreamState& ss);
+    uint32_t ChoosePesPacketParser(void);
+    
 protected:
     uint32_t ParsePesPacket(void);
     uint32_t ParsePesPadding(void);

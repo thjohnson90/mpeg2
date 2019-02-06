@@ -16,13 +16,24 @@ using namespace std;
 #include "picture.h"
 #include "slice.h"
 #include "base_parser.h"
+#include "file_bitbuf.h"
+#include "buf_bitbuf.h"
 
-BaseParser::BaseParser(BitBuffer& bb, StreamState& ss) :
-    _bitBuffer(bb), _streamState(ss), _packHdrParser(nullptr),
-    _systemHdrParser(nullptr), _pesHdrParser(nullptr),
-    _seqHdrParser(nullptr), _seqExtParser(nullptr),
-    _userDataParser(nullptr), _gopParser(nullptr),
-    _picParser(nullptr), _sliceParser(nullptr)
+BaseParser::BaseParser(FileBitBuffer& fbb, BufBitBuffer&bbb, StreamState& ss) :
+    _fbitBuffer(fbb),
+    _bbitBuffer(bbb),
+    _streamState(ss),
+    _packHdrParser(nullptr),
+    _systemHdrParser(nullptr),
+    _pesHdrParser(nullptr),
+    _pesPacketParser(nullptr),
+    _seqHdrParser(nullptr),
+    _seqExtParser(nullptr),
+    _userDataParser(nullptr),
+    _gopParser(nullptr),
+    _picParser(nullptr),
+    _sliceParser(nullptr),
+    _inCallback(false)
 {
 }
 
@@ -40,6 +51,7 @@ uint32_t BaseParser::Initialize(void)
 	    _packHdrParser   = GetPackHdrParser();
 	    _systemHdrParser = GetSystemHdrParser();
 	    _pesHdrParser    = GetPesHdrParser();
+	    _pesPacketParser = GetPesPacketParser();
 	    _seqHdrParser    = GetSeqHdrParser();
 	    _seqExtParser    = GetSeqExtParser();
 	    _userDataParser  = GetUserDataParser();
@@ -61,6 +73,7 @@ uint32_t BaseParser::Destroy(void)
     delete _packHdrParser;   _packHdrParser   = nullptr;
     delete _systemHdrParser; _systemHdrParser = nullptr;
     delete _pesHdrParser;    _pesHdrParser    = nullptr;
+    delete _pesPacketParser; _pesPacketParser = nullptr;
     delete _seqHdrParser;    _seqHdrParser    = nullptr;
     delete _seqExtParser;    _seqExtParser    = nullptr;
     delete _userDataParser;  _userDataParser  = nullptr;
@@ -69,14 +82,17 @@ uint32_t BaseParser::Destroy(void)
     delete _sliceParser;     _sliceParser     = nullptr;
 }
 
+static uint32_t calldepth = 0;
 uint32_t BaseParser::ParseVideoSequence(void)
 {
-    uint32_t status = 0;
-    
+    uint32_t status   = 0;
+    bool     exitLoop = false;
+
+    cout << "Enter CD: " << ++calldepth << endl;
+
     do
     {
-        unsigned char cmd = _bitBuffer.GetNextStartCode();
-        
+	uint8_t cmd = _fbitBuffer.GetNextStartCode();
         // remap cmd byte to simplify switch statement
         if (cmd >= StreamState::pes_audio_stream_min &&
             cmd <= StreamState::pes_audio_stream_max) {
@@ -86,38 +102,38 @@ uint32_t BaseParser::ParseVideoSequence(void)
                    cmd <= StreamState::pes_video_stream_max) {
             cmd &= StreamState::pes_video_stream_min;
         }
-        
+
         switch (cmd)
         {
         case StreamState::pack_header:
             CHECK_PARSE(_packHdrParser->ParsePackHdr(), status);
+	    if (_inCallback) {
+		exitLoop = false;
+	    }
             break;
-            
+
         case StreamState::system_header:
             CHECK_PARSE(_systemHdrParser->ParseSystemHdr(), status);
             break;
-            
-        case StreamState::pes_audio_stream_min:
-        case StreamState::pes_video_stream_min:
+
+	case StreamState::pes_audio_stream_min:
+	case StreamState::pes_video_stream_min:
         case StreamState::pes_padding_stream:
             CHECK_PARSE(_pesHdrParser->ParsePesHdr(), status);
-            break;
-
-        case StreamState::sequence_header:
-	    //
-	    // _streamState.pesHdr.packet_len contains the PES packet length
-	    //
-            CHECK_PARSE(_seqHdrParser->ParseSequenceHdr(), status);
-	    if (StreamState::extension_start == _bitBuffer.GetLastStartCode())
-	    {
-		// This is an MPEG2 stream
-		CHECK_PARSE(_seqExtParser->ParseSequenceExt(), status);
-		CHECK_PARSE(ParseMPEG2Stream(), status);
-	    } else {
-		// This is an MPEG1 stream
-		status = -1;
+	    if (StreamState::pes_video_stream_min == cmd) {
+		cout << "PES Packet Size: 0x" << hex << _streamState.pesHdr.packet_len << endl;
+		uint8_t* pbuf = _bbitBuffer.GetEmptyBuffer(_streamState.pesHdr.packet_len);
+		if (nullptr != pbuf) {
+		    _fbitBuffer.GetBytes(pbuf, _streamState.pesHdr.packet_len);
+		    CHECK_PARSE(_pesPacketParser->ChoosePesPacketParser(), status);
+		    _bbitBuffer.GetNextStartCode();
+		    if (!_inCallback) {
+			ParseMPEG2Stream();
+		    } else {
+			exitLoop = true;
+		    }
+		}
 	    }
-	    
             break;
 
         default:
@@ -130,58 +146,50 @@ uint32_t BaseParser::ParseVideoSequence(void)
 	    }
             break;
         }
-    } while (0 <= status && StreamState::sequence_end != _bitBuffer.GetLastStartCode());
-    
+
+	if (-1 == status) {
+	    break;
+	}
+    } while (StreamState::sequence_end != _fbitBuffer.GetLastStartCode() && !exitLoop);
+
+    cout << "Exit CD: " << calldepth-- << endl;
+
     return status;
 }
 
 uint32_t BaseParser::ParseMPEG2Stream(void)
 {
     uint32_t status = 0;
-    
+
     do {
+	CHECK_PARSE(_seqHdrParser->ParseSequenceHdr(), status);
+	if (StreamState::extension_start != _bbitBuffer.GetLastStartCode()) {
+	    // MPEG1 stream
+	    status = -1;
+	    break;
+	}
+
+	CHECK_PARSE(_seqExtParser->ParseSequenceExt(), status);
 	do {
 	    CHECK_PARSE(ParseExtensionUserData(0), status);
-	    
 	    do {
-		if (_bitBuffer.GetLastStartCode() == StreamState::group_start) {
+		if (StreamState::group_start == _bbitBuffer.GetLastStartCode()) {
 		    CHECK_PARSE(_gopParser->ParseGopHdr(), status);
 		    CHECK_PARSE(ParseExtensionUserData(1), status);
 		}
 
-		if (_bitBuffer.GetLastStartCode() == StreamState::picture_start) {
-		    CHECK_PARSE(_picParser->ParsePictureHdr(), status);
-		}
-
-		if (_bitBuffer.GetLastStartCode() == StreamState::extension_start) {
-		    CHECK_PARSE(_picParser->ParsePictCodingExt(), status);
-		}
+		CHECK_PARSE(_picParser->ParsePictureHdr(), status);
+		CHECK_PARSE(_picParser->ParsePictCodingExt(), status);
 		CHECK_PARSE(ParseExtensionUserData(2), status);
 		CHECK_PARSE(_picParser->ParsePictData(), status);
-	    } while ((_bitBuffer.GetLastStartCode() == StreamState::picture_start) ||
-		     (_bitBuffer.GetLastStartCode() == StreamState::group_start));
+	    } while (StreamState::picture_start == _bbitBuffer.GetLastStartCode() ||
+		     StreamState::group_start == _bbitBuffer.GetLastStartCode());
 
-	    if (0 > status) {
-	      break;
-	    }
-
-	    if (_bitBuffer.GetLastStartCode() == StreamState::sequence_header) {
+	    if (StreamState::sequence_end != _bbitBuffer.GetLastStartCode()) {
 		CHECK_PARSE(_seqHdrParser->ParseSequenceHdr(), status);
 		CHECK_PARSE(_seqExtParser->ParseSequenceExt(), status);
 	    }
-
-	    if (_bitBuffer.GetLastStartCode() == StreamState::pack_header) {
-		CHECK_PARSE(_packHdrParser->ParsePackHdr(), status);
-		assert(StreamState::pes_video_stream_min == _bitBuffer.GetNextStartCode());
-		CHECK_PARSE(_pesHdrParser->ParsePesHdr(), status);
-		_bitBuffer.GetNextStartCode();
-	    }
-
-	    if (_bitBuffer.GetLastStartCode() == StreamState::extension_start) {
-		CHECK_PARSE(_picParser->ParsePictCodingExt(), status);
-	    }
-	} while (_bitBuffer.GetLastStartCode() != StreamState::sequence_end);
-	
+	} while (0 /*StreamState::sequence_end != _bbitBuffer.GetLastStartCode()*/);
     } while (0);
     
     return status;
@@ -192,12 +200,12 @@ uint32_t BaseParser::ParseExtensionUserData(uint32_t flag)
     uint32_t status = 0;
 
     do {
-	while ((_bitBuffer.GetLastStartCode() == StreamState::extension_start) ||
-	       (_bitBuffer.GetLastStartCode() == StreamState::user_data_start)) {
-	    if ((flag != 1) && (_bitBuffer.GetLastStartCode() == StreamState::extension_start)) {
+	while ((_bbitBuffer.GetLastStartCode() == StreamState::extension_start) ||
+	       (_bbitBuffer.GetLastStartCode() == StreamState::user_data_start)) {
+	    if ((flag != 1) && (_bbitBuffer.GetLastStartCode() == StreamState::extension_start)) {
 		CHECK_PARSE(_seqExtParser->ParseExtensionData(flag), status);
 	    }
-	    if (_bitBuffer.GetLastStartCode() == StreamState::user_data_start) {
+	    if (_bbitBuffer.GetLastStartCode() == StreamState::user_data_start) {
 		CHECK_PARSE(_userDataParser->ParseUserData(), status);
 	    }
 	}
@@ -209,7 +217,7 @@ uint32_t BaseParser::ParseExtensionUserData(uint32_t flag)
 PackHdrParser* BaseParser::GetPackHdrParser(void)
 {
     if (nullptr == _packHdrParser) {
-        _packHdrParser = new PackHdrParser(_bitBuffer, _streamState);
+        _packHdrParser = new PackHdrParser(_fbitBuffer, _streamState);
     }
     return _packHdrParser;
 }
@@ -217,7 +225,7 @@ PackHdrParser* BaseParser::GetPackHdrParser(void)
 SystemHdrParser* BaseParser::GetSystemHdrParser(void)
 {
     if (nullptr == _systemHdrParser) {
-        _systemHdrParser = new SystemHdrParser(_bitBuffer, _streamState);
+        _systemHdrParser = new SystemHdrParser(_fbitBuffer, _streamState);
     }
     return _systemHdrParser;
 }
@@ -225,15 +233,23 @@ SystemHdrParser* BaseParser::GetSystemHdrParser(void)
 PesHeaderParser* BaseParser::GetPesHdrParser(void)
 {
     if (nullptr == _pesHdrParser) {
-        _pesHdrParser = new PesHeaderParser(_bitBuffer, _streamState);
+        _pesHdrParser = new PesHeaderParser(_fbitBuffer, _streamState);
     }
     return _pesHdrParser;
+}
+
+PesPacketParser* BaseParser::GetPesPacketParser(void)
+{
+    if (nullptr == _pesPacketParser) {
+        _pesPacketParser = new PesPacketParser(_bbitBuffer, _streamState);
+    }
+    return _pesPacketParser;
 }
 
 SeqHdrParser* BaseParser::GetSeqHdrParser(void)
 {
     if (nullptr == _seqHdrParser) {
-        _seqHdrParser = new SeqHdrParser(_bitBuffer, _streamState);
+        _seqHdrParser = new SeqHdrParser(_bbitBuffer, _streamState);
     }
     return _seqHdrParser;
 }
@@ -241,7 +257,7 @@ SeqHdrParser* BaseParser::GetSeqHdrParser(void)
 SeqExtParser* BaseParser::GetSeqExtParser(void)
 {
     if (nullptr == _seqExtParser) {
-        _seqExtParser = new SeqExtParser(_bitBuffer, _streamState);
+        _seqExtParser = new SeqExtParser(_bbitBuffer, _streamState);
     }
     return _seqExtParser;
 }
@@ -249,7 +265,7 @@ SeqExtParser* BaseParser::GetSeqExtParser(void)
 UserDataParser* BaseParser::GetUserDataParser(void)
 {
     if (nullptr == _userDataParser) {
-        _userDataParser = new UserDataParser(_bitBuffer, _streamState);
+        _userDataParser = new UserDataParser(_bbitBuffer, _streamState);
     }
     return _userDataParser;
 }
@@ -257,7 +273,7 @@ UserDataParser* BaseParser::GetUserDataParser(void)
 GopHdrParser* BaseParser::GetGopHdrParser(void)
 {
     if (nullptr == _gopParser) {
-        _gopParser = new GopHdrParser(_bitBuffer, _streamState);
+        _gopParser = new GopHdrParser(_bbitBuffer, _streamState);
     }
     return _gopParser;
 }
@@ -265,7 +281,7 @@ GopHdrParser* BaseParser::GetGopHdrParser(void)
 PictureParser* BaseParser::GetPictureParser(void)
 {
     if (nullptr == _picParser) {
-        _picParser = new PictureParser(_bitBuffer, _streamState);
+        _picParser = new PictureParser(_bbitBuffer, _streamState);
     }
     return _picParser;
 }
@@ -273,7 +289,7 @@ PictureParser* BaseParser::GetPictureParser(void)
 SliceParser* BaseParser::GetSliceParser(void)
 {
     if (nullptr == _sliceParser) {
-        _sliceParser = new SliceParser(_bitBuffer, _streamState);
+        _sliceParser = new SliceParser(_bbitBuffer, _streamState);
     }
     return _sliceParser;
 }

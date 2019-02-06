@@ -18,6 +18,7 @@ using namespace std;
 #include "slice.h"
 #include "base_parser.h"
 #include "file_bitbuf.h"
+#include "buf_bitbuf.h"
 
 int main(int argc, char** argv)
 {
@@ -29,30 +30,33 @@ int main(int argc, char** argv)
 	    status = -1;
             break;
         }
-	
+
         cout << "Parsing file: " << argv[1] << endl;
-	
-        ifstream inFile(argv[1], ifstream::binary);
+
+        ifstream inFile(argv[1], ios::binary);
         if (!inFile.good()) {
             status = -1;
 	    cout << "Cannot open file " << argv[1] << endl;
             break;
         }
-	
+
 	filebuf* pbuf = inFile.rdbuf();
 	streamoff sz = pbuf->pubseekoff(0, inFile.end, inFile.in);
 	pbuf->pubseekpos(0, inFile.in);
-	
+
 	cout << "File is " << sz << "bytes long." << endl;
-	
+
  	StreamState streamState;
 	FileBitBuffer fileBitBuf(inFile);
+	BufBitBuffer  bufBitBuf;
 
-	BaseParser parser(fileBitBuf, streamState);
+	BaseParser parser(fileBitBuf, bufBitBuf, streamState);
 	if (0 > parser.Initialize()) {
 	    cout << "Parser initialization error!" << endl;
 	    break;
 	}
+	bufBitBuf.SetBaseParser(&parser);
+
 	status = parser.ParseVideoSequence();
 	if (0 > status) {
 	    cout << "Detected an MPEG1 Stream" << endl;
@@ -60,6 +64,6 @@ int main(int argc, char** argv)
 	}
 	PictureDataMgr::GetPictureDataMgr(streamState)->ReleasePictureDataMgr();
     } while (0);
-    
+
     return status;
 }

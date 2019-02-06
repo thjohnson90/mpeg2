@@ -44,9 +44,9 @@ uint32_t FileBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
 
 	// if we need more bytes read directly from the file
 	if (0 != len) {
-	    _inFile.get(reinterpret_cast<char*>(&buf[index]), len);
+	    _inFile.read(reinterpret_cast<char*>(&buf[index]), len);
 	    // if we got here the bit buffer is empty (GetBitCount() will return 0)
-	    if (_inFile.eof()) {
+	    if (_inFile.eof() || _inFile.fail()) {
 		status = -1;
 	    }
 	}

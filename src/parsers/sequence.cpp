@@ -10,9 +10,18 @@ SeqHdrParser::SeqHdrParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _st
 {
 }
 
-uint32_t SeqHdrParser::LoadQuantMatrix(uint8_t (&q)[65])
+uint32_t SeqHdrParser::LoadQuantMatrix(uint8_t (&q)[64])
 {
-    return _bitBuffer.GetBytes(q, 65);
+    uint32_t status = 0;
+    int      i      = 0;
+
+    do {
+	for (i = 0; i < 64; i++) {
+	    q[i] = static_cast<uint8_t>(_bitBuffer.GetBits(8));
+	}
+    } while (0);
+
+    return status;
 }
 
 uint32_t SeqHdrParser::ParseSequenceHdr(void)

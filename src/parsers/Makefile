@@ -4,7 +4,7 @@ include ../../Makefile.inc
 
 FILES = base_parser extension gop pack peshdr picture sequence slice syshdr user
 SRCS = $(addsuffix .cpp, $(FILES))
-HDRS = $(addsuffix .h, $(FIELS))
+HDRS = $(addsuffix .h, $(FILES))
 OBJS = $(patsubst %.cpp, %.o, $(SRCS))
 
 all: $(OBJS) $(HDRS)

@@ -110,8 +110,8 @@ struct sequence_header
     uint32_t constrained_params_flag     : 1;
     uint32_t load_intra_quant_matrix     : 1;
     uint32_t load_non_intra_quant_matrix : 1;
-    uint8_t  intra_quant_matrix[65];           // add one for null termination - not part of MPEG spec
-    uint8_t  non_intra_quant_matrix[65];
+    uint8_t  intra_quant_matrix[64];
+    uint8_t  non_intra_quant_matrix[64];
 };
 
 struct sequence_extension

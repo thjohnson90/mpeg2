@@ -8,7 +8,7 @@ public:
     uint32_t ParseSequenceHdr(void);
     
 protected:
-    uint32_t LoadQuantMatrix(uint8_t (&q)[65]);
+    uint32_t LoadQuantMatrix(uint8_t (&q)[64]);
     
 private:
     BitBuffer&   _bitBuffer;

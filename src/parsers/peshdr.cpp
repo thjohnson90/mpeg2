@@ -17,7 +17,20 @@ uint32_t PesHeaderParser::ParsePesHdr(void)
     do {
         _streamState.pesHdr.stream_id  = _bitBuffer.GetLastStartCode();
         _streamState.pesHdr.packet_len = _bitBuffer.GetBits(16);
+    } while (0);
+    
+    return status;
+}
 
+PesPacketParser::PesPacketParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _streamState(ss)
+{
+}
+
+uint32_t PesPacketParser::ChoosePesPacketParser(void)
+{
+    uint32_t status = 0;
+    
+    do {
         // check for other stream types
         if (_streamState.pesHdr.stream_id != StreamState::program_stream_map &&
             _streamState.pesHdr.stream_id != StreamState::pes_padding_stream &&
@@ -45,7 +58,7 @@ uint32_t PesHeaderParser::ParsePesHdr(void)
     return status;
 }
 
-uint32_t PesHeaderParser::ParsePesPacket(void)
+uint32_t PesPacketParser::ParsePesPacket(void)
 {
     uint32_t status = 0;
     uint32_t marker = 0;
@@ -208,7 +221,7 @@ uint32_t PesHeaderParser::ParsePesPacket(void)
     return status;
 }
 
-uint32_t PesHeaderParser::ParsePesPadding(void)
+uint32_t PesPacketParser::ParsePesPadding(void)
 {
     uint32_t status = 0;
     
@@ -230,7 +243,7 @@ uint32_t PesHeaderParser::ParsePesPadding(void)
     return status;
 }
 
-uint32_t PesHeaderParser::ParsePesDataBytes(void)
+uint32_t PesPacketParser::ParsePesDataBytes(void)
 {
     uint32_t status = 0;
     

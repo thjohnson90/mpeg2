@@ -4,7 +4,7 @@ include ../../Makefile.inc
 
 FILES = bitbuf file_bitbuf buf_bitbuf
 SRCS = $(addsuffix .cpp, $(FILES))
-HDRS = $(addsuffix .h, $(FIELS))
+HDRS = $(addsuffix .h, $(FILES))
 OBJS = $(patsubst %.cpp, %.o, $(SRCS))
 
 all: $(OBJS) $(HDRS)
