@@ -9,13 +9,10 @@ public:
 
     uint32_t Initialize(void* (*func)(void*), void* arg);
     uint32_t Destroy(void);
-    uint32_t Ring(uint32_t cmd) {
-	_cmd = cmd;
-	return _bell.Ring();
-    }
-    uint32_t Listen(void) {return _bell.Listen();}
+    uint32_t Ring(uint32_t cmd);
+    uint32_t Listen(void);
     uint32_t GetCmd(void) {return _cmd;}
-    uint32_t Join(void** retval)   {return pthread_join(_thrdId, retval);}
+    uint32_t Join(void** retval);
     
     enum {
 	parse_cmd_null,
@@ -26,8 +23,6 @@ public:
     };
     
 private:
-    void DumpCommand(void);
-
     Doorbell  _bell;
     pthread_t _thrdId;
     uint32_t  _cmd;

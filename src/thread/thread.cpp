@@ -40,32 +40,36 @@ uint32_t Thread::Destroy(void)
     return status;
 }
 
-void Thread::DumpCommand(void)
+uint32_t Thread::Ring(uint32_t cmd)
 {
-    switch (_cmd) {
-    case parse_cmd_null:
-	cout << "Got null cmd..." << endl;
-	break;
-	
-    case parse_cmd_data_ready:
-	cout << "Got data ready cmd..." << endl;
-	break;
-	
-    case parse_cmd_data_consumed:
-	cout << "Got data consumed cmd..." << endl;
-	break;
-	
-    case parse_cmd_seq_end_received:
-	cout << "Got sequence end cmd..." << endl;
-	break;
-	
-    case parse_cmd_exit:
-	cout << "Got exit cmd..." << endl;
-	break;
+    uint32_t status = 0;
 
-    default:
-	cout << "Got invalid cmd..." << endl;
-	break;
-    }
+    do {
+	_cmd = cmd;
+	status = _bell.Ring();
+    } while (0);
+
+    return status;
 }
 
+uint32_t Thread::Listen(void)
+{
+    uint32_t status = 0;
+
+    do {
+	status = _bell.Listen();
+    } while (0);
+
+    return status;
+}
+
+uint32_t Thread::Join(void** retval)
+{
+    uint32_t status = 0;
+
+    do {
+	status = pthread_join(_thrdId, retval);
+    } while (0);
+
+    return status;
+}
