@@ -17,6 +17,8 @@ using namespace std;
 #include "picture.h"
 #include "picdata.h"
 #include "slice.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "base_parser.h"
 #include "file_bitbuf.h"
 #include "buf_bitbuf.h"

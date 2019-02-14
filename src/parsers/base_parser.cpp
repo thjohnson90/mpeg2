@@ -16,6 +16,8 @@ using namespace std;
 #include "gop.h"
 #include "picture.h"
 #include "slice.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "base_parser.h"
 #include "file_bitbuf.h"
 #include "buf_bitbuf.h"
@@ -34,13 +36,8 @@ BaseParser::BaseParser(FileBitBuffer& fbb, BufBitBuffer&bbb, StreamState& ss) :
     _gopParser(nullptr),
     _picParser(nullptr),
     _sliceParser(nullptr),
-    _parseThrdId(0),
-    _parseCmd(parse_cmd_null)
+    _cmd(Thread::parse_cmd_null)
 {
-    _mainDoorbellMutex = PTHREAD_MUTEX_INITIALIZER;
-    _mainDoorbellCond  = PTHREAD_COND_INITIALIZER;
-    _workDoorbellMutex = PTHREAD_MUTEX_INITIALIZER;
-    _workDoorbellCond  = PTHREAD_COND_INITIALIZER;
 }
 
 BaseParser::~BaseParser()
@@ -50,49 +47,15 @@ BaseParser::~BaseParser()
 
 void* BaseParser::ParserWorker(void* arg)
 {
-    uint32_t cv = parse_cmd_null;
     BaseParser& parser = *static_cast<BaseParser*>(arg);
     
-    pthread_mutex_lock(&parser._workDoorbellMutex);
-
-    parser.WaitWorkMessage(cv);
-    assert(parse_cmd_data_ready == cv);
+    parser._worker.Listen();
+    assert(Thread::parse_cmd_data_ready == parser._worker.GetCmd());
     parser.ParseMPEG2Stream();
 
-    parser.SendMainMessage(parse_cmd_seq_end_received);
-
-    pthread_mutex_unlock(&parser._workDoorbellMutex);
+    parser.Ring(Thread::parse_cmd_seq_end_received);
 
     return arg;
-}
-
-void BaseParser::DumpCommand(uint32_t cmd)
-{
-    switch (cmd) {
-    case parse_cmd_null:
-	cout << "Got null cmd..." << endl;
-	break;
-	
-    case parse_cmd_data_ready:
-	cout << "Got data ready cmd..." << endl;
-	break;
-	
-    case parse_cmd_data_consumed:
-	cout << "Got data consumed cmd..." << endl;
-	break;
-	
-    case parse_cmd_exit:
-	cout << "Got exit cmd..." << endl;
-	break;
-
-    case parse_cmd_seq_end_received:
-	cout << "Got sequence end cmd..." << endl;
-	break;
-	
-    default:
-	cout << "Got invalid cmd..." << endl;
-	break;
-    }
 }
 
 uint32_t BaseParser::Initialize(void)
@@ -121,15 +84,12 @@ uint32_t BaseParser::Initialize(void)
 	}
 	
 	// initalize low-level parser thread
-	if (!_parseThrdActive) {
-	    status = pthread_create(&_parseThrdId, 0, ParserWorker, this);
-	    if (0 != status) {
-		Destroy();
-		status = -1;
-		break;
-	    }
+	status = _worker.Initialize(ParserWorker, this);
+	if (0 != status) {
+	    Destroy();
+	    status = -1;
+	    break;
 	}
-	pthread_mutex_lock(&_mainDoorbellMutex);
     } while (0);
     
     return status;
@@ -150,14 +110,7 @@ uint32_t BaseParser::Destroy(void)
     delete _sliceParser;     _sliceParser     = nullptr;
 
     // destroy low-level parser thread
-#if 0
-    pthread_mutex_lock(&_parseMutex);
-    _parseCmd = parse_cmd_exit;
-    pthread_cond_signal(&_parseCond);
-    pthread_mutex_unlock(&_parseMutex);
-#endif
-    pthread_mutex_unlock(&_mainDoorbellMutex);
-    pthread_join(_parseThrdId, nullptr);
+    _worker.Join(nullptr);
 }
 
 uint32_t BaseParser::ParseVideoSequence(void)
@@ -191,18 +144,16 @@ uint32_t BaseParser::ParseVideoSequence(void)
 	case StreamState::pes_video_stream_min:
             CHECK_PARSE(_pesHdrParser->ParsePesHdr(), status);
 	    if (StreamState::pes_video_stream_min == cmd) {
-		uint32_t cv = parse_cmd_null;
-		
 		cout << "PES Packet Size: 0x" << hex << _streamState.pesHdr.packet_len << endl;
 		uint8_t* pbuf = _bbitBuffer.GetEmptyBuffer(_streamState.pesHdr.packet_len);
 		if (nullptr != pbuf) {
 		    _fbitBuffer.GetBytes(pbuf, _streamState.pesHdr.packet_len);
 		    CHECK_PARSE(_pesPacketParser->ChoosePesPacketParser(), status);
-		    SendWorkMessage(parse_cmd_data_ready);
-		    WaitMainMessage(cv);
+		    _worker.Ring(Thread::parse_cmd_data_ready);
+		    _bell.Listen();
 		    assert(
-			parse_cmd_data_consumed == cv ||
-			parse_cmd_seq_end_received == cv);
+			Thread::parse_cmd_data_consumed == _cmd ||
+			Thread::parse_cmd_seq_end_received == _cmd);
 		}
 	    }
             break;
@@ -285,64 +236,6 @@ uint32_t BaseParser::ParseExtensionUserData(uint32_t flag)
 	}
     } while(0);
 
-    return status;
-}
-
-uint32_t BaseParser::SendMainMessage(uint32_t cmd)
-{
-    uint32_t status = 0;
-    
-    do {
-	pthread_mutex_lock(&_mainDoorbellMutex);
-	_parseCmd = cmd;
-	pthread_cond_signal(&_mainDoorbellCond);
-	pthread_mutex_unlock(&_mainDoorbellMutex);
-    } while (0);
-
-    return status;
-}
-
-uint32_t BaseParser::WaitMainMessage(uint32_t& cmd)
-{
-    uint32_t status = 0;
-    
-    do {
-	// wait for the next command from the main thread
-	cout << "Main waiting for next cmd..." << endl;
-	pthread_cond_wait(&_mainDoorbellCond, &_mainDoorbellMutex);
-	cmd = _parseCmd;
-	DumpCommand(cmd);
-    } while (0);
-    
-    return status;
-}
-
-uint32_t BaseParser::SendWorkMessage(uint32_t cmd)
-{
-    uint32_t status = 0;
-    
-    do {
-	pthread_mutex_lock(&_workDoorbellMutex);
-	_parseCmd = cmd;
-	pthread_cond_signal(&_workDoorbellCond);
-	pthread_mutex_unlock(&_workDoorbellMutex);
-    } while (0);
-
-    return status;
-}
-
-uint32_t BaseParser::WaitWorkMessage(uint32_t& cmd)
-{
-    uint32_t status = 0;
-    
-    do {
-	// wait for the next command from the main thread
-	cout << "Worker waiting for next cmd..." << endl;
-	pthread_cond_wait(&_workDoorbellCond, &_workDoorbellMutex);
-	cmd = _parseCmd;
-	DumpCommand(cmd);
-    } while (0);
-    
     return status;
 }
 

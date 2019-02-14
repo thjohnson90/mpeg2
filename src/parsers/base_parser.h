@@ -10,23 +10,14 @@ public:
     BaseParser(FileBitBuffer& fbb, BufBitBuffer& bbb, StreamState& ss);
     ~BaseParser();
     
-    enum {
-	parse_cmd_null,
-	parse_cmd_data_ready,
-	parse_cmd_data_consumed,
-	parse_cmd_seq_end_received,
-	parse_cmd_exit
-    };
-    
     uint32_t Initialize(void);
     uint32_t Destroy(void);
     uint32_t ParseVideoSequence(void);
     uint32_t ParseMPEG2Stream(void);
     uint32_t ParseExtensionUserData(uint32_t flag);
-    uint32_t SendMainMessage(uint32_t cmd);
-    uint32_t WaitMainMessage(uint32_t& cmd);
-    uint32_t SendWorkMessage(uint32_t cmd);
-    uint32_t WaitWorkMessage(uint32_t& cmd);
+    uint32_t Ring(uint32_t cmd) {_cmd = cmd; return _bell.Ring();}
+    uint32_t WorkerListen(void) {return _worker.Listen();}
+    uint32_t GetWorkerCmd(void) {return _worker.GetCmd();}
     
 protected:
     PackHdrParser*    GetPackHdrParser(void);
@@ -41,6 +32,8 @@ protected:
     SliceParser*      GetSliceParser(void);
     
 private:
+    static void* ParserWorker(void*);
+    
     FileBitBuffer&    _fbitBuffer;
     BufBitBuffer&     _bbitBuffer;
     StreamState&      _streamState;
@@ -54,16 +47,9 @@ private:
     GopHdrParser*     _gopParser;
     PictureParser*    _picParser;
     SliceParser*      _sliceParser;
-    bool              _parseThrdActive;
-    pthread_t         _parseThrdId;
-    pthread_mutex_t   _mainDoorbellMutex;
-    pthread_cond_t    _mainDoorbellCond;
-    pthread_mutex_t   _workDoorbellMutex;
-    pthread_cond_t    _workDoorbellCond;
-    uint32_t          _parseCmd;
-
-    static void* ParserWorker(void* pThis);
-    void DumpCommand(uint32_t cmd);
+    Doorbell          _bell;
+    Thread            _worker;
+    uint32_t          _cmd;
 };
 
 #endif

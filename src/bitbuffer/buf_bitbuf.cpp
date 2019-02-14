@@ -13,6 +13,8 @@
 #include "gop.h"
 #include "picture.h"
 #include "slice.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "base_parser.h"
 
 using namespace std;
@@ -138,17 +140,16 @@ uint32_t BufBitBuffer::FillBitBuffer()
 {
     uint32_t status    = 0;
     uint32_t newBitCnt = 0;
-    uint32_t cmd       = BaseParser::parse_cmd_null;
     uint64_t tmpBuf    = 0ULL;
     
     do {
 	if (0 == (_size - _offset)) {
 	    // buffer is empty
-	    _bparser->SendMainMessage(BaseParser::parse_cmd_data_consumed);
+	    _bparser->Ring(Thread::parse_cmd_data_consumed);
 	    
 	    // wait for more_data message
-	    _bparser->WaitWorkMessage(cmd);
-	    if (BaseParser::parse_cmd_exit == cmd) {
+	    _bparser->WorkerListen();
+	    if (Thread::parse_cmd_exit == _bparser->GetWorkerCmd()) {
 		status = -1;
 		break;
 	    }
