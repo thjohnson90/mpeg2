@@ -10,5 +10,5 @@ $(BLDDIR):
 
 clean:
 	$(MAKE) clean -C $(SRCDIR)
-	$(RM) build *~
+	$(RM) $(BLDDIR) *~
 

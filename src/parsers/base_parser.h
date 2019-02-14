@@ -14,6 +14,7 @@ public:
 	parse_cmd_null,
 	parse_cmd_data_ready,
 	parse_cmd_data_consumed,
+	parse_cmd_seq_end_received,
 	parse_cmd_exit
     };
     
@@ -22,8 +23,10 @@ public:
     uint32_t ParseVideoSequence(void);
     uint32_t ParseMPEG2Stream(void);
     uint32_t ParseExtensionUserData(uint32_t flag);
-    uint32_t SendMessage(uint32_t cmd, bool lock = false);
-    uint32_t WaitMessage(uint32_t& cmd);
+    uint32_t SendMainMessage(uint32_t cmd);
+    uint32_t WaitMainMessage(uint32_t& cmd);
+    uint32_t SendWorkMessage(uint32_t cmd);
+    uint32_t WaitWorkMessage(uint32_t& cmd);
     
 protected:
     PackHdrParser*    GetPackHdrParser(void);
@@ -53,11 +56,14 @@ private:
     SliceParser*      _sliceParser;
     bool              _parseThrdActive;
     pthread_t         _parseThrdId;
-    pthread_mutex_t   _parseMutex;
-    pthread_cond_t    _parseCond;
+    pthread_mutex_t   _mainDoorbellMutex;
+    pthread_cond_t    _mainDoorbellCond;
+    pthread_mutex_t   _workDoorbellMutex;
+    pthread_cond_t    _workDoorbellCond;
     uint32_t          _parseCmd;
 
     static void* ParserWorker(void* pThis);
+    void DumpCommand(uint32_t cmd);
 };
 
 #endif

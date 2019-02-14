@@ -144,10 +144,10 @@ uint32_t BufBitBuffer::FillBitBuffer()
     do {
 	if (0 == (_size - _offset)) {
 	    // buffer is empty
-	    _bparser->SendMessage(BaseParser::parse_cmd_data_consumed);
+	    _bparser->SendMainMessage(BaseParser::parse_cmd_data_consumed);
 	    
 	    // wait for more_data message
-	    _bparser->WaitMessage(cmd);
+	    _bparser->WaitWorkMessage(cmd);
 	    if (BaseParser::parse_cmd_exit == cmd) {
 		status = -1;
 		break;
