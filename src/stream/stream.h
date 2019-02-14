@@ -279,6 +279,7 @@ struct StreamState
         sequence_end         = 0xB7,
         group_start          = 0xB8,
         system_start_min     = 0xB9,
+	program_end          = 0xB9,
         pack_header          = 0xBA,
         system_header        = 0xBB,
         program_stream_map   = 0xBC,

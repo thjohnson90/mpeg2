@@ -138,22 +138,22 @@ uint32_t BufBitBuffer::FillBitBuffer()
 {
     uint32_t status    = 0;
     uint32_t newBitCnt = 0;
+    uint32_t cmd       = BaseParser::parse_cmd_null;
     uint64_t tmpBuf    = 0ULL;
-
+    
     do {
 	if (0 == (_size - _offset)) {
 	    // buffer is empty
-	    if (!_bparser->GetCallbackState()) {
-		_bparser->SetCallbackState();
-		status = _bparser->ParseVideoSequence();
-		_bparser->SetCallbackState(false);
-	    }
-	    if (-1 == status || _bparser->GetCallbackState()) {
+	    _bparser->SendMessage(BaseParser::parse_cmd_data_consumed);
+	    
+	    // wait for more_data message
+	    _bparser->WaitMessage(cmd);
+	    if (BaseParser::parse_cmd_exit == cmd) {
 		status = -1;
 		break;
 	    }
 	}
-
+	
 	while ((_bitBufCnt + newBitCnt + BITS_IN_BYTE) <= BitBuffer::MAX_BITS_IN_BUF)
 	{
 	    if (0 != (_size - _offset)) {
@@ -171,7 +171,7 @@ uint32_t BufBitBuffer::FillBitBuffer()
 		break;
 	    }
 	}
-
+	
 	_bitBuf |= (tmpBuf << (MAX_BITS_IN_BUF - _bitBufCnt - newBitCnt));
 	_bitBufCnt += newBitCnt;
     } while (0);

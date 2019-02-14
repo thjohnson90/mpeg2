@@ -62,6 +62,7 @@ uint32_t PesPacketParser::ParsePesPacket(void)
 {
     uint32_t status = 0;
     uint32_t marker = 0;
+    uint32_t bUsed  = 0;
     
     do {
         marker = _bitBuffer.GetBits(2);
@@ -97,6 +98,8 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             _streamState.pesHdr.ext.PTS14_00 = _bitBuffer.GetBits(15);
             marker                           = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+
+	    bUsed += 5;
         }
         
         if (0x03 == _streamState.pesHdr.ext.PTS_DTS_flags) {
@@ -125,6 +128,8 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             _streamState.pesHdr.ext.DTS14_00 = _bitBuffer.GetBits(15);
             marker                           = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+
+	    bUsed += 10;
         }
         
         // check for ESCR
@@ -143,6 +148,8 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             _streamState.pesHdr.ext.ESCR_ext  = _bitBuffer.GetBits(9);
             marker                            = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+
+	    bUsed += 6;
         }
         
         // check for ES rate
@@ -152,6 +159,8 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             _streamState.pesHdr.ext.ES_rate = _bitBuffer.GetBits(22);
             marker                          = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
+
+	    bUsed += 3;
         }
         
         // check for DSM trick mode - not used by DVD
@@ -164,11 +173,15 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             marker                                       = _bitBuffer.GetBits(1);
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
             _streamState.pesHdr.ext.additional_copy_info = _bitBuffer.GetBits(7);
+
+	    bUsed += 1;
         }
         
         // check for PES CRC
         if (_streamState.pesHdr.ext.PES_CRC_flag) {
             _streamState.pesHdr.ext.previous_PES_packet_CRC = _bitBuffer.GetBits(16);
+
+	    bUsed += 2;
         }
         
         // check for PES extension
@@ -179,6 +192,8 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             _streamState.pesHdr.ext.PSTD_buff_flag           = _bitBuffer.GetBits(1);
             marker                                           = _bitBuffer.GetBits(3);
             _streamState.pesHdr.ext.PES_ext_flag2            = _bitBuffer.GetBits(1);
+
+	    bUsed += 1;
         }
         
         // if PES_private_data_flag is set, an additional 16 bytes of user defined date is appended
@@ -198,6 +213,8 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
             _streamState.pesHdr.ext.MPEG1_MPEG2_identifier = _bitBuffer.GetBits(1);
             _streamState.pesHdr.ext.original_stuffing_len  = _bitBuffer.GetBits(6);
+
+	    bUsed += 2;
         }
         
         // check for PSTD buffer flag
@@ -206,6 +223,8 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
             _streamState.pesHdr.ext.PSTD_buffer_scale = _bitBuffer.GetBits(1);
             _streamState.pesHdr.ext.PSTD_buffer_size  = _bitBuffer.GetBits(13);
+
+	    bUsed += 2;
         }
         
         // check for PES extension flag 2
@@ -215,7 +234,15 @@ uint32_t PesPacketParser::ParsePesPacket(void)
             CHECK_VALUE_AND_BREAK(1, marker, status, -1);
             _streamState.pesHdr.ext.PES_ext_field_len = _bitBuffer.GetBits(7);
             _streamState.pesHdr.ext.reserved          = _bitBuffer.GetBits(8);
+
+	    bUsed += 2;
         }
+
+	if (0 != _streamState.pesHdr.ext.PES_header_data_len - bUsed) {
+	    uint8_t buf[_streamState.pesHdr.ext.PES_header_data_len];
+
+	    _bitBuffer.GetBytes(buf, _streamState.pesHdr.ext.PES_header_data_len - bUsed);
+	}
     } while(0);
     
     return status;

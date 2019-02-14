@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdint.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -56,7 +57,6 @@ int main(int argc, char** argv)
 	    break;
 	}
 	bufBitBuf.SetBaseParser(&parser);
-
 	status = parser.ParseVideoSequence();
 	if (0 > status) {
 	    cout << "Detected an MPEG1 Stream" << endl;

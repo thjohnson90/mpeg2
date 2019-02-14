@@ -15,7 +15,7 @@ $(SUBDIRS):
 
 $(TARGET): $(SRCS) $(OBJS)
 	@echo -------------------- Linking Main ----------------
-	$(CXX) $(OPT) $(INCLUDES) -o $@ $? $(OBJS)
+	$(CXX) $(OPT) $(INCLUDES) -o $@ $? $(OBJS) -lpthread
 	cp $(ROOT)/$(TARGET) $(ROOT)/../$(BLDDIR)/.
 
 

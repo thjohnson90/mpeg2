@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <assert.h>
+#include <pthread.h>
 
 using namespace std;
 
@@ -33,8 +34,11 @@ BaseParser::BaseParser(FileBitBuffer& fbb, BufBitBuffer&bbb, StreamState& ss) :
     _gopParser(nullptr),
     _picParser(nullptr),
     _sliceParser(nullptr),
-    _inCallback(false)
+    _parseThrdId(0),
+    _parseCmd(parse_cmd_null)
 {
+    _parseMutex = PTHREAD_MUTEX_INITIALIZER;
+    _parseCond  = PTHREAD_COND_INITIALIZER;
 }
 
 BaseParser::~BaseParser()
@@ -42,34 +46,64 @@ BaseParser::~BaseParser()
     Destroy();
 }
 
+void* BaseParser::ParserWorker(void* arg)
+{
+    uint32_t cv = parse_cmd_null;
+    BaseParser& parser = *static_cast<BaseParser*>(arg);
+    
+    pthread_mutex_lock(&parser._parseMutex);
+
+    parser.WaitMessage(cv);
+    assert(parse_cmd_data_ready == cv);
+    parser.ParseMPEG2Stream();
+
+    pthread_mutex_unlock(&parser._parseMutex);
+
+    return arg;
+}
+
 uint32_t BaseParser::Initialize(void)
 {
     uint32_t status = 0;
     
-    if (nullptr == _packHdrParser) {
-	try {
-	    _packHdrParser   = GetPackHdrParser();
-	    _systemHdrParser = GetSystemHdrParser();
-	    _pesHdrParser    = GetPesHdrParser();
-	    _pesPacketParser = GetPesPacketParser();
-	    _seqHdrParser    = GetSeqHdrParser();
-	    _seqExtParser    = GetSeqExtParser();
-	    _userDataParser  = GetUserDataParser();
-	    _gopParser       = GetGopHdrParser();
-	    _picParser       = GetPictureParser();
-	    _sliceParser     = GetSliceParser();
-	} catch (std::bad_alloc) {
-	    Destroy();
-	    
-	    status = -1;
+    do {
+	// create parsers
+	if (nullptr == _packHdrParser) {
+	    try {
+		_packHdrParser   = GetPackHdrParser();
+		_systemHdrParser = GetSystemHdrParser();
+		_pesHdrParser    = GetPesHdrParser();
+		_pesPacketParser = GetPesPacketParser();
+		_seqHdrParser    = GetSeqHdrParser();
+		_seqExtParser    = GetSeqExtParser();
+		_userDataParser  = GetUserDataParser();
+		_gopParser       = GetGopHdrParser();
+		_picParser       = GetPictureParser();
+		_sliceParser     = GetSliceParser();
+	    } catch (std::bad_alloc) {
+		Destroy();
+		status = -1;
+		break;
+	    }
 	}
-    }
-
+	
+	// initalize low-level parser thread
+	if (!_parseThrdActive) {
+	    status = pthread_create(&_parseThrdId, 0, ParserWorker, this);
+	    if (0 != status) {
+		Destroy();
+		status = -1;
+		break;
+	    }
+	}
+    } while (0);
+    
     return status;
 }
 
 uint32_t BaseParser::Destroy(void)
 {
+    // destroy parsers
     delete _packHdrParser;   _packHdrParser   = nullptr;
     delete _systemHdrParser; _systemHdrParser = nullptr;
     delete _pesHdrParser;    _pesHdrParser    = nullptr;
@@ -80,15 +114,19 @@ uint32_t BaseParser::Destroy(void)
     delete _gopParser;       _gopParser       = nullptr;
     delete _picParser;       _picParser       = nullptr;
     delete _sliceParser;     _sliceParser     = nullptr;
+
+    // destroy low-level parser thread
+    pthread_mutex_lock(&_parseMutex);
+    _parseCmd = parse_cmd_exit;
+    pthread_cond_signal(&_parseCond);
+    pthread_mutex_unlock(&_parseMutex);
+    
+    pthread_join(_parseThrdId, nullptr);
 }
 
-static uint32_t calldepth = 0;
 uint32_t BaseParser::ParseVideoSequence(void)
 {
-    uint32_t status   = 0;
-    bool     exitLoop = false;
-
-    cout << "Enter CD: " << ++calldepth << endl;
+    uint32_t status = 0;
 
     do
     {
@@ -107,9 +145,6 @@ uint32_t BaseParser::ParseVideoSequence(void)
         {
         case StreamState::pack_header:
             CHECK_PARSE(_packHdrParser->ParsePackHdr(), status);
-	    if (_inCallback) {
-		exitLoop = false;
-	    }
             break;
 
         case StreamState::system_header:
@@ -118,41 +153,42 @@ uint32_t BaseParser::ParseVideoSequence(void)
 
 	case StreamState::pes_audio_stream_min:
 	case StreamState::pes_video_stream_min:
-        case StreamState::pes_padding_stream:
             CHECK_PARSE(_pesHdrParser->ParsePesHdr(), status);
 	    if (StreamState::pes_video_stream_min == cmd) {
+		uint32_t cv = parse_cmd_null;
+		
 		cout << "PES Packet Size: 0x" << hex << _streamState.pesHdr.packet_len << endl;
 		uint8_t* pbuf = _bbitBuffer.GetEmptyBuffer(_streamState.pesHdr.packet_len);
 		if (nullptr != pbuf) {
 		    _fbitBuffer.GetBytes(pbuf, _streamState.pesHdr.packet_len);
 		    CHECK_PARSE(_pesPacketParser->ChoosePesPacketParser(), status);
-		    _bbitBuffer.GetNextStartCode();
-		    if (!_inCallback) {
-			ParseMPEG2Stream();
-		    } else {
-			exitLoop = true;
-		    }
+		    SendMessage(parse_cmd_data_ready);
+		    WaitMessage(cv);
+		    assert(parse_cmd_data_consumed == cv);
 		}
 	    }
             break;
 
-        default:
-            if (cmd >= StreamState::slice_start_min && cmd <= StreamState::slice_start_max) {
-                CHECK_PARSE(_sliceParser->ParseSliceData(), status);
-                continue;
-            } else {
-		cout << "Error: Invalid start code: 0x" << hex << static_cast<int>(cmd) << endl;
-		exit(-1);
+	case StreamState::pes_padding_stream:
+	    {
+		uint32_t len  = _fbitBuffer.GetBits(16);
+		uint8_t* pbuf = new uint8_t[len];
+		if (nullptr != pbuf) {
+		    _fbitBuffer.GetBytes(pbuf, len);
+		    delete [] pbuf;
+		    pbuf = nullptr;
+		}
 	    }
-            break;
-        }
-
-	if (-1 == status) {
 	    break;
-	}
-    } while (StreamState::sequence_end != _fbitBuffer.GetLastStartCode() && !exitLoop);
 
-    cout << "Exit CD: " << calldepth-- << endl;
+	case StreamState::program_end:
+	    break;
+
+        default:
+	    cout << "Error: Invalid start code: 0x" << hex << static_cast<int>(cmd) << endl;
+	    exit(-1);
+        }
+    } while (StreamState::program_end != _fbitBuffer.GetLastStartCode());
 
     return status;
 }
@@ -292,4 +328,58 @@ SliceParser* BaseParser::GetSliceParser(void)
         _sliceParser = new SliceParser(_bbitBuffer, _streamState);
     }
     return _sliceParser;
+}
+
+uint32_t BaseParser::SendMessage(uint32_t cmd, bool lock)
+{
+    uint32_t status = 0;
+    
+    do {
+	if (lock) {
+	    pthread_mutex_lock(&_parseMutex);
+	}
+	_parseCmd = cmd;
+	pthread_cond_signal(&_parseCond);
+	if (lock) {
+	    pthread_mutex_unlock(&_parseMutex);
+	}
+    } while (0);
+
+    return status;
+}
+
+uint32_t BaseParser::WaitMessage(uint32_t& cmd)
+{
+    uint32_t    status = 0;
+    
+    do {
+	// wait for the next command from the main thread
+	cout << "Waiting for next cmd..." << endl;
+	pthread_cond_wait(&_parseCond, &_parseMutex);
+	cmd = _parseCmd;
+	
+	switch (cmd) {
+	case parse_cmd_null:
+	    cout << "Got null cmd..." << endl;
+	    break;
+	    
+	case parse_cmd_data_ready:
+	    cout << "Got data ready cmd..." << endl;
+	    break;
+	    
+	case parse_cmd_data_consumed:
+	    cout << "Got data consumed cmd..." << endl;
+	    break;
+	    
+	case parse_cmd_exit:
+	    cout << "Got exit cmd..." << endl;
+	    break;
+	    
+	default:
+	    cout << "Git invalid cmd..." << endl;
+	    break;
+	}
+    } while (0);
+    
+    return status;
 }

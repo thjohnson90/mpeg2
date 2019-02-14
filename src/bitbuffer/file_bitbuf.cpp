@@ -114,19 +114,21 @@ uint32_t FileBitBuffer::FillBitBuffer()
     
     while ((_bitBufCnt + newBitCnt + BITS_IN_BYTE) <= BitBuffer::MAX_BITS_IN_BUF)
     {
-	if (!_inFile.eof()) {
-	    // there is at least one more byte available in the file
-	    tmpBuf <<= BITS_IN_BYTE;
-	    tmpBuf |= static_cast<uint64_t>(_inFile.get());
-	    newBitCnt += BITS_IN_BYTE;
-	} else {
+	uint32_t c = 0;
+
+	c = _inFile.get();
+	if (_inFile.eof()) {
 	    // there are no bytes available in the file
-	    if (0 >= _bitBufCnt + newBitCnt) {
+	    if (0 == _bitBufCnt + newBitCnt) {
 		// no bytes available in the file and not bits in the bit buffer
 		status = -1;
 	    }
 	    break;
 	}
+	// there is at least one more byte available in the file
+	tmpBuf <<= BITS_IN_BYTE;
+	tmpBuf |= static_cast<uint64_t>(c);
+	newBitCnt += BITS_IN_BYTE;
     }
     
     _bitBuf |= (tmpBuf << (MAX_BITS_IN_BUF - _bitBufCnt - newBitCnt));
