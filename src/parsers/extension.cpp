@@ -121,6 +121,7 @@ uint32_t SeqExtParser::ParseSeqScalableExt(void)
     uint32_t marker = 0;
 
     do {
+	_streamState.extData.seqScalExt.present       = true;
 	_streamState.extData.seqScalExt.scalable_mode = _bitBuffer.GetBits(2);
 	_streamState.extData.seqScalExt.layer_id      = _bitBuffer.GetBits(4);
 

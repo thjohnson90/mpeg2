@@ -168,6 +168,8 @@ struct sequence_scalable_extension
     uint32_t mux_to_prog_seq      : 1;
     uint32_t pict_mux_order       : 3;
     uint32_t pict_mux_factor      : 3;
+
+    bool     present;
 };
 
 struct quant_matrix_extension

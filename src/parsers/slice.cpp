@@ -34,6 +34,32 @@ uint32_t SliceParser::ParseSliceData(void)
         if (2800 < _streamState.seqHdr.vertical_sz) {
             picData->sliceData.slice_vertical_position_ext = _bitBuffer.GetBits(3);
         }
+
+	if (true == _streamState.extData.seqScalExt.present) {
+	    if (sequence_scalable_extension::data_partitioning ==
+		_streamState.extData.seqScalExt.scalable_mode) {
+		picData->sliceData.priority_breakpoint = _bitBuffer.GetBits(7);
+	    }
+	}
+
+	picData->sliceData.quantizer_scale_code = _bitBuffer.GetBits(5);
+
+	if (1 == _bitBuffer.PeekBits(1, status)) {
+	    picData->sliceData.intra_slice_flag = _bitBuffer.GetBits(1);
+	    picData->sliceData.intra_slice      = _bitBuffer.GetBits(1);
+	    picData->sliceData.reserved         = _bitBuffer.GetBits(7);
+	    while (1 == _bitBuffer.PeekBits(1, status)) {
+		picData->sliceData.extra_bit_slice         = _bitBuffer.GetBits(1);
+		picData->sliceData.extra_information_slice = _bitBuffer.GetBits(8);
+	    }
+	}
+
+	picData->sliceData.extra_bit_slice = _bitBuffer.GetBits(1);
+//	do {
+	    // macroblock()
+//	} while (0 == _bitBuffer.PeekBits(23);
+	
+	_bitBuffer.GetNextStartCode();
     } while (0);
     
     return status;

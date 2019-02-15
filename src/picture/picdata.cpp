@@ -78,6 +78,14 @@ void PictureCodingExtension::ResetData(void)
 
 SliceData::SliceData() : slice_vertical_position_ext(0)
 {
+    slice_vertical_position_ext = 0;
+    priority_breakpoint         = 0;
+    quantizer_scale_code        = 0;
+    intra_slice_flag            = 0;
+    intra_slice                 = 0;
+    reserved                    = 0;
+    extra_bit_slice             = 0;
+    extra_information_slice     = 0;
 }
 
 void SliceData::ResetData(void)

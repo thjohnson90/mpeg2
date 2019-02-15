@@ -64,6 +64,13 @@ struct SliceData
     void ResetData();
     
     uint32_t slice_vertical_position_ext : 3;
+    uint32_t priority_breakpoint         : 7;
+    uint32_t quantizer_scale_code        : 5;
+    uint32_t intra_slice_flag            : 1;
+    uint32_t intra_slice                 : 1;
+    uint32_t reserved                    : 7;
+    uint32_t extra_bit_slice             : 1;
+    uint32_t extra_information_slice     : 8;
 };
 
 struct PictureData

@@ -14,8 +14,8 @@ using namespace std;
 #include "extension.h"
 #include "user.h"
 #include "gop.h"
-#include "picture.h"
 #include "slice.h"
+#include "picture.h"
 #include "doorbell.h"
 #include "thread.h"
 #include "base_parser.h"
@@ -35,7 +35,6 @@ BaseParser::BaseParser(FileBitBuffer& fbb, BufBitBuffer&bbb, StreamState& ss) :
     _userDataParser(nullptr),
     _gopParser(nullptr),
     _picParser(nullptr),
-    _sliceParser(nullptr),
     _cmd(Thread::parse_cmd_null)
 {
 }
@@ -75,12 +74,20 @@ uint32_t BaseParser::Initialize(void)
 		_userDataParser  = GetUserDataParser();
 		_gopParser       = GetGopHdrParser();
 		_picParser       = GetPictureParser();
-		_sliceParser     = GetSliceParser();
+		status = _picParser->Initialize();
+		if (-1 == status) {
+		    Destroy();
+		    break;
+		}
 	    } catch (std::bad_alloc) {
 		Destroy();
 		status = -1;
 		break;
 	    }
+	}
+
+	if (-1 == status) {
+	    break;
 	}
 	
 	// initalize low-level parser thread
@@ -97,6 +104,9 @@ uint32_t BaseParser::Initialize(void)
 
 uint32_t BaseParser::Destroy(void)
 {
+    // destroy low-level parser thread
+    _worker.Join(nullptr);
+
     // destroy parsers
     delete _packHdrParser;   _packHdrParser   = nullptr;
     delete _systemHdrParser; _systemHdrParser = nullptr;
@@ -106,11 +116,9 @@ uint32_t BaseParser::Destroy(void)
     delete _seqExtParser;    _seqExtParser    = nullptr;
     delete _userDataParser;  _userDataParser  = nullptr;
     delete _gopParser;       _gopParser       = nullptr;
-    delete _picParser;       _picParser       = nullptr;
-    delete _sliceParser;     _sliceParser     = nullptr;
 
-    // destroy low-level parser thread
-    _worker.Join(nullptr);
+    _picParser->Destroy();
+    delete _picParser;       _picParser       = nullptr;
 }
 
 uint32_t BaseParser::ParseVideoSequence(void)
@@ -309,12 +317,4 @@ PictureParser* BaseParser::GetPictureParser(void)
         _picParser = new PictureParser(_bbitBuffer, _streamState);
     }
     return _picParser;
-}
-
-SliceParser* BaseParser::GetSliceParser(void)
-{
-    if (nullptr == _sliceParser) {
-        _sliceParser = new SliceParser(_bbitBuffer, _streamState);
-    }
-    return _sliceParser;
 }

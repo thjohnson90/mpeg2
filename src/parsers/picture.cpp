@@ -6,11 +6,61 @@ using namespace std;
 
 #include "stream.h"
 #include "bitbuf.h"
+#include "pack.h"
+#include "syshdr.h"
+#include "peshdr.h"
+#include "sequence.h"
+#include "extension.h"
+#include "user.h"
+#include "gop.h"
+#include "slice.h"
 #include "picture.h"
+#include "doorbell.h"
+#include "thread.h"
+#include "base_parser.h"
+#include "file_bitbuf.h"
+#include "buf_bitbuf.h"
 #include "picdata.h"
 
-PictureParser::PictureParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _streamState(ss)
+PictureParser::PictureParser(BitBuffer& bb, StreamState& ss) :
+    _sliceParser(nullptr),
+    _bitBuffer(bb),
+    _streamState(ss)
 {
+}
+
+PictureParser::~PictureParser()
+{
+}
+
+uint32_t PictureParser::Initialize(void)
+{
+    uint32_t status = 0;
+
+    do {
+	// create parsers
+	if (nullptr == _sliceParser) {
+	    try {
+		_sliceParser = GetSliceParser();
+	    } catch (std::bad_alloc) {
+		Destroy();
+		status = -1;
+		break;
+	    }
+	}
+    } while (0);
+
+    return status;
+}
+
+uint32_t PictureParser::Destroy(void)
+{
+    uint32_t status = 0;
+
+    do {
+    } while (0);
+
+    return status;
 }
 
 uint32_t PictureParser::ParsePictureHdr(void)
@@ -116,17 +166,24 @@ uint32_t PictureParser::ParsePictCodingExt(void)
 uint32_t PictureParser::ParsePictData(void)
 {
     uint32_t status = 0;
-    uint8_t  sc     = 0;
-
+    
     do {
 	do {
-	    // slice()
-
-	    sc = _bitBuffer.GetNextStartCode();
-	} while ((StreamState::slice_start_min < sc) &&
-		  (StreamState::slice_start_max >= sc));
-//	_bitBuffer.GetNextStartCode();
+	    status = _sliceParser->ParseSliceData();
+	    if (-1 == status) {
+		break;
+	    }
+	} while ((StreamState::slice_start_min < _bitBuffer.GetLastStartCode()) &&
+		 (StreamState::slice_start_max >= _bitBuffer.GetLastStartCode()));
     } while (0);
 
     return status;
+}
+
+SliceParser* PictureParser::GetSliceParser(void)
+{
+    if (nullptr == _sliceParser) {
+        _sliceParser = new SliceParser(_bitBuffer, _streamState);
+    }
+    return _sliceParser;
 }

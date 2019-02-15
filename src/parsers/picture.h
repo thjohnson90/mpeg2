@@ -5,6 +5,11 @@ class PictureParser
 {
 public:
     PictureParser(BitBuffer& bb, StreamState& ss);
+    ~PictureParser();
+
+    uint32_t Initialize(void);
+    uint32_t Destroy(void);
+    
     uint32_t ParsePictureHdr(void);
     uint32_t ParsePictCodingExt(void);
     uint32_t ParsePictData(void);
@@ -22,6 +27,9 @@ public:
     };
     
 private:
+    SliceParser* GetSliceParser(void);
+    
+    SliceParser* _sliceParser;
     BitBuffer&   _bitBuffer;
     StreamState& _streamState;
 };

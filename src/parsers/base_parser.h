@@ -29,7 +29,6 @@ protected:
     UserDataParser*   GetUserDataParser(void);
     GopHdrParser*     GetGopHdrParser(void);
     PictureParser*    GetPictureParser(void);
-    SliceParser*      GetSliceParser(void);
     
 private:
     static void* ParserWorker(void*);
@@ -46,7 +45,6 @@ private:
     UserDataParser*   _userDataParser;
     GopHdrParser*     _gopParser;
     PictureParser*    _picParser;
-    SliceParser*      _sliceParser;
     Doorbell          _bell;
     Thread            _worker;
     uint32_t          _cmd;

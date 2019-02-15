@@ -166,7 +166,8 @@ sequence_scalable_extension::sequence_scalable_extension() :
     pict_mux_enable(0),
     mux_to_prog_seq(0),
     pict_mux_order(0),
-    pict_mux_factor(0)
+    pict_mux_factor(0),
+    present(false)
 {
 }
 
