@@ -238,6 +238,7 @@ int32_t PesPacketParser::ParsePesPacket(void)
 	    bUsed += 2;
         }
 
+	_streamState.pesHdr.packet_len -= (_streamState.pesHdr.ext.PES_header_data_len + 3);
 	if (0 != _streamState.pesHdr.ext.PES_header_data_len - bUsed) {
 	    uint8_t buf[_streamState.pesHdr.ext.PES_header_data_len];
 

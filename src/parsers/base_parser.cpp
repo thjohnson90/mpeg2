@@ -160,10 +160,10 @@ uint32_t BaseParser::ParseVideoSequence(void)
             CHECK_PARSE(_pesHdrParser->ParsePesHdr(), status);
 	    if (StreamState::pes_video_stream_min == cmd) {
 		cout << "PES Packet Size: 0x" << hex << _streamState.pesHdr.packet_len << endl;
+		CHECK_PARSE(_pesPacketParser->ChoosePesPacketParser(), status);
 		uint8_t* pbuf = _bbitBuffer.GetEmptyBuffer(_streamState.pesHdr.packet_len);
 		if (nullptr != pbuf) {
 		    _fbitBuffer.GetBytes(pbuf, _streamState.pesHdr.packet_len);
-		    CHECK_PARSE(_pesPacketParser->ChoosePesPacketParser(), status);
 		    _worker.Ring(Thread::parse_cmd_data_ready);
 		    _bell.Listen();
 		    assert(
@@ -281,7 +281,7 @@ PesHeaderParser* BaseParser::GetPesHdrParser(void)
 PesPacketParser* BaseParser::GetPesPacketParser(void)
 {
     if (nullptr == _pesPacketParser) {
-        _pesPacketParser = new PesPacketParser(_bbitBuffer, _streamState);
+        _pesPacketParser = new PesPacketParser(_fbitBuffer, _streamState);
     }
     return _pesPacketParser;
 }
