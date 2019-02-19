@@ -10,23 +10,9 @@ SeqHdrParser::SeqHdrParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _st
 {
 }
 
-uint32_t SeqHdrParser::LoadQuantMatrix(uint8_t (&q)[64])
+int32_t SeqHdrParser::ParseSequenceHdr(void)
 {
-    uint32_t status = 0;
-    int      i      = 0;
-
-    do {
-	for (i = 0; i < 64; i++) {
-	    q[i] = static_cast<uint8_t>(_bitBuffer.GetBits(8));
-	}
-    } while (0);
-
-    return status;
-}
-
-uint32_t SeqHdrParser::ParseSequenceHdr(void)
-{
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
     
     do {
@@ -59,5 +45,19 @@ uint32_t SeqHdrParser::ParseSequenceHdr(void)
 	_bitBuffer.GetNextStartCode();
     } while (0);
     
+    return status;
+}
+
+int32_t SeqHdrParser::LoadQuantMatrix(uint8_t (&q)[64])
+{
+    int32_t status = 0;
+    int      i      = 0;
+
+    do {
+	for (i = 0; i < 64; i++) {
+	    q[i] = static_cast<uint8_t>(_bitBuffer.GetBits(8));
+	}
+    } while (0);
+
     return status;
 }

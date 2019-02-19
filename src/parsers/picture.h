@@ -7,12 +7,12 @@ public:
     PictureParser(BitBuffer& bb, StreamState& ss);
     ~PictureParser();
 
-    uint32_t Initialize(void);
-    uint32_t Destroy(void);
+    int32_t Initialize(void);
+    int32_t Destroy(void);
     
-    uint32_t ParsePictureHdr(void);
-    uint32_t ParsePictCodingExt(void);
-    uint32_t ParsePictData(void);
+    int32_t ParsePictureHdr(void);
+    int32_t ParsePictCodingExt(void);
+    int32_t ParsePictData(void);
 
     enum {
 	SEQ_EXT_ID            = 1,

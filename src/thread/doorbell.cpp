@@ -18,9 +18,9 @@ Doorbell::~Doorbell()
     }
 }
 
-uint32_t Doorbell::LockBell(void)
+int32_t Doorbell::LockBell(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	pthread_mutex_lock(&_doorbellMutex);
@@ -30,9 +30,9 @@ uint32_t Doorbell::LockBell(void)
     return status;
 }
 
-uint32_t Doorbell::UnlockBell(void)
+int32_t Doorbell::UnlockBell(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	pthread_mutex_unlock(&_doorbellMutex);
@@ -42,9 +42,9 @@ uint32_t Doorbell::UnlockBell(void)
     return status;
 }
 
-uint32_t Doorbell::Ring(void)
+int32_t Doorbell::Ring(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	LockBell();
@@ -55,9 +55,9 @@ uint32_t Doorbell::Ring(void)
     return status;
 }
 
-uint32_t Doorbell::Listen(void)
+int32_t Doorbell::Listen(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	pthread_cond_wait(&_doorbellCond, &_doorbellMutex);

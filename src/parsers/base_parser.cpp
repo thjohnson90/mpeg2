@@ -14,6 +14,7 @@ using namespace std;
 #include "extension.h"
 #include "user.h"
 #include "gop.h"
+#include "macroblk.h"
 #include "slice.h"
 #include "picture.h"
 #include "doorbell.h"
@@ -57,9 +58,9 @@ void* BaseParser::ParserWorker(void* arg)
     return arg;
 }
 
-uint32_t BaseParser::Initialize(void)
+int32_t BaseParser::Initialize(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
     
     do {
 	// create parsers
@@ -102,29 +103,35 @@ uint32_t BaseParser::Initialize(void)
     return status;
 }
 
-uint32_t BaseParser::Destroy(void)
+int32_t BaseParser::Destroy(void)
 {
-    // destroy low-level parser thread
-    _worker.Join(nullptr);
+    int32_t status = 0;
 
-    // destroy parsers
-    delete _packHdrParser;   _packHdrParser   = nullptr;
-    delete _systemHdrParser; _systemHdrParser = nullptr;
-    delete _pesHdrParser;    _pesHdrParser    = nullptr;
-    delete _pesPacketParser; _pesPacketParser = nullptr;
-    delete _seqHdrParser;    _seqHdrParser    = nullptr;
-    delete _seqExtParser;    _seqExtParser    = nullptr;
-    delete _userDataParser;  _userDataParser  = nullptr;
-    delete _gopParser;       _gopParser       = nullptr;
+    do {
+	// destroy low-level parser thread
+	_worker.Join(nullptr);
+	
+	// destroy parsers
+	delete _packHdrParser;   _packHdrParser   = nullptr;
+	delete _systemHdrParser; _systemHdrParser = nullptr;
+	delete _pesHdrParser;    _pesHdrParser    = nullptr;
+	delete _pesPacketParser; _pesPacketParser = nullptr;
+	delete _seqHdrParser;    _seqHdrParser    = nullptr;
+	delete _seqExtParser;    _seqExtParser    = nullptr;
+	delete _userDataParser;  _userDataParser  = nullptr;
+	delete _gopParser;       _gopParser       = nullptr;
+	
+	_picParser->Destroy();
+	delete _picParser;       _picParser       = nullptr;
+    } while (0);
 
-    _picParser->Destroy();
-    delete _picParser;       _picParser       = nullptr;
+    return status;
 }
 
 uint32_t BaseParser::ParseVideoSequence(void)
 {
-    uint32_t status = 0;
-
+    int32_t status = 0;
+    
     do
     {
 	uint8_t cmd = _fbitBuffer.GetNextStartCode();
@@ -190,9 +197,9 @@ uint32_t BaseParser::ParseVideoSequence(void)
     return status;
 }
 
-uint32_t BaseParser::ParseMPEG2Stream(void)
+int32_t BaseParser::ParseMPEG2Stream(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	CHECK_PARSE(_seqHdrParser->ParseSequenceHdr(), status);
@@ -228,9 +235,9 @@ uint32_t BaseParser::ParseMPEG2Stream(void)
     return status;
 }
 
-uint32_t BaseParser::ParseExtensionUserData(uint32_t flag)
+int32_t BaseParser::ParseExtensionUserData(uint32_t flag)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	while ((_bbitBuffer.GetLastStartCode() == StreamState::extension_start) ||

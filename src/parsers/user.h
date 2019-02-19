@@ -5,7 +5,7 @@ class UserDataParser
 {
 public:
     UserDataParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ParseUserData(void);
+    int32_t ParseUserData(void);
     
 private:
     BitBuffer&   _bitBuffer;

@@ -11,6 +11,7 @@
 #include "extension.h"
 #include "user.h"
 #include "gop.h"
+#include "macroblk.h"
 #include "slice.h"
 #include "picture.h"
 #include "doorbell.h"
@@ -47,7 +48,7 @@ uint32_t BufBitBuffer::GetByte(void)
     return GetBits(BITS_IN_BYTE);
 }
 
-uint32_t BufBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
+int32_t BufBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
 {
     uint32_t status = 0;
     uint32_t index  = 0;
@@ -114,7 +115,7 @@ uint32_t BufBitBuffer::GetBits(uint32_t bitCnt)
     return static_cast<uint32_t>(tmp);
 }
 
-uint32_t BufBitBuffer::PeekBits(uint32_t bitCnt, uint32_t& status)
+uint32_t BufBitBuffer::PeekBits(uint32_t bitCnt)
 {
     uint64_t bits = 0;
     
@@ -122,7 +123,6 @@ uint32_t BufBitBuffer::PeekBits(uint32_t bitCnt, uint32_t& status)
         if (bitCnt > _bitBufCnt) {
             if (-1 == FillBitBuffer()) {
 		// reached eof and bit buffer is empty
-		status = -1;
 		break;
 	    }
         }
@@ -136,7 +136,7 @@ uint32_t BufBitBuffer::PeekBits(uint32_t bitCnt, uint32_t& status)
     return static_cast<uint32_t>(bits);
 }
 
-uint32_t BufBitBuffer::FillBitBuffer()
+int32_t BufBitBuffer::FillBitBuffer()
 {
     uint32_t status    = 0;
     uint32_t newBitCnt = 0;
@@ -206,3 +206,20 @@ uint8_t* BufBitBuffer::GetEmptyBuffer(uint32_t sz)
 
     return pbuf;
 }
+
+int32_t BufBitBuffer::SetBaseParser(BaseParser* bp)
+{
+    int32_t status = 0;
+
+    do {
+	if (nullptr == bp) {
+	    status = -1;
+	    break;
+	}
+	_bparser = bp;
+    } while (0);
+
+    return status;
+}
+    
+    

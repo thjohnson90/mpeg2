@@ -7,12 +7,12 @@ public:
     Thread();
     ~Thread();
 
-    uint32_t Initialize(void* (*func)(void*), void* arg);
-    uint32_t Destroy(void);
-    uint32_t Ring(uint32_t cmd);
-    uint32_t Listen(void);
-    uint32_t GetCmd(void) {return _cmd;}
-    uint32_t Join(void** retval);
+    int32_t Initialize(void* (*func)(void*), void* arg);
+    int32_t Destroy(void);
+    int32_t Ring(uint32_t cmd);
+    int32_t Listen(void);
+    int32_t GetCmd(void) {return _cmd;}
+    int32_t Join(void** retval);
     
     enum {
 	parse_cmd_null,

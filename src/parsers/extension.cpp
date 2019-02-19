@@ -14,9 +14,9 @@ SeqExtParser::SeqExtParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _st
 {
 }
 
-uint32_t SeqExtParser::ParseSequenceExt(void)
+int32_t SeqExtParser::ParseSequenceExt(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
     
     do {
         _streamState.extData.seqExt.profile_level    = _bitBuffer.GetBits(8);
@@ -36,17 +36,14 @@ uint32_t SeqExtParser::ParseSequenceExt(void)
     return status;
 }
 
-uint32_t SeqExtParser::ParseExtensionData(uint32_t flag)
+int32_t SeqExtParser::ParseExtensionData(uint32_t flag)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint8_t  sc     = 0;
     
     do {
 	while (_bitBuffer.GetLastStartCode() == StreamState::extension_start) {
-	    sc = _bitBuffer.PeekBits(4, status);
-	    if (-1 == status) {
-		break;
-	    }
+	    sc = _bitBuffer.PeekBits(4);
 
 	    if (seq_display_ext != sc &&
 		seq_scalable_ext != sc &&
@@ -89,9 +86,9 @@ uint32_t SeqExtParser::ParseExtensionData(uint32_t flag)
     return status;
 }
 
-uint32_t SeqExtParser::ParseSeqDisplayExt(void)
+int32_t SeqExtParser::ParseSeqDisplayExt(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
     
     do {
@@ -115,9 +112,9 @@ uint32_t SeqExtParser::ParseSeqDisplayExt(void)
     return status;
 }
 
-uint32_t SeqExtParser::ParseSeqScalableExt(void)
+int32_t SeqExtParser::ParseSeqScalableExt(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
 
     do {
@@ -154,9 +151,9 @@ uint32_t SeqExtParser::ParseSeqScalableExt(void)
     return status;
 }
 
-uint32_t SeqExtParser::ParseQuantMatrixExt(void)
+int32_t SeqExtParser::ParseQuantMatrixExt(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t i      = 0;
 
     do {
@@ -195,9 +192,9 @@ uint32_t SeqExtParser::ParseQuantMatrixExt(void)
     return status;
 }
 
-uint32_t SeqExtParser::ParseCopyrightExt(void)
+int32_t SeqExtParser::ParseCopyrightExt(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
     
     do {
@@ -222,9 +219,9 @@ uint32_t SeqExtParser::ParseCopyrightExt(void)
     return status;
 }
 
-uint32_t SeqExtParser::ParsePictureDispExt(void)
+int32_t SeqExtParser::ParsePictureDispExt(void)
 {
-    uint32_t status  = 0;
+    int32_t  status  = 0;
     uint32_t marker  = 0;
     uint32_t num_off = 0;
     uint32_t i       = 0;
@@ -279,9 +276,9 @@ uint32_t SeqExtParser::ParsePictureDispExt(void)
     return status;
 }
 
-uint32_t SeqExtParser::ParsePictSpatialScalExt(void)
+int32_t SeqExtParser::ParsePictSpatialScalExt(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
     
     do {
@@ -302,9 +299,9 @@ uint32_t SeqExtParser::ParsePictSpatialScalExt(void)
     return status;
 }
 
-uint32_t SeqExtParser::ParsePictTemporalScalExt(void)
+int32_t SeqExtParser::ParsePictTemporalScalExt(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
 
     do {

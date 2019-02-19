@@ -5,7 +5,7 @@ class PackHdrParser
 {
 public:
     PackHdrParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ParsePackHdr(void);
+    int32_t ParsePackHdr(void);
     
 private:
     BitBuffer&   _bitBuffer;

@@ -5,8 +5,8 @@ class SeqExtParser
 {
 public:
     SeqExtParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ParseSequenceExt(void);
-    uint32_t ParseExtensionData(uint32_t flag);
+    int32_t ParseSequenceExt(void);
+    int32_t ParseExtensionData(uint32_t flag);
 
     enum {
 	seq_ext                    = 1,
@@ -22,13 +22,13 @@ public:
     };
     
 protected:
-    uint32_t ParseSeqDisplayExt(void);
-    uint32_t ParseSeqScalableExt(void);
-    uint32_t ParseQuantMatrixExt(void);
-    uint32_t ParseCopyrightExt(void);
-    uint32_t ParsePictureDispExt(void);
-    uint32_t ParsePictSpatialScalExt(void);
-    uint32_t ParsePictTemporalScalExt(void);
+    int32_t ParseSeqDisplayExt(void);
+    int32_t ParseSeqScalableExt(void);
+    int32_t ParseQuantMatrixExt(void);
+    int32_t ParseCopyrightExt(void);
+    int32_t ParsePictureDispExt(void);
+    int32_t ParsePictSpatialScalExt(void);
+    int32_t ParsePictTemporalScalExt(void);
     
 private:
     BitBuffer&   _bitBuffer;

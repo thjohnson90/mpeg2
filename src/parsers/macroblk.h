@@ -1,16 +1,16 @@
-#ifndef __SLICE_H__
-#define __SLICE_H__
+#ifndef __MACROBLK_H__
+#define __MACROBLK_H__
 
-class SliceParser
+class MacroblkParser
 {
 public:
-    SliceParser(BitBuffer& bb, StreamState& ss);
-    ~SliceParser();
+    MacroblkParser(BitBuffer& bb, StreamState& ss);
+    ~MacroblkParser();
     
     int32_t Initialize(void);
     int32_t Destroy(void);
     
-    int32_t ParseSliceData(void);
+    int32_t ParseMacroblkData(void);
     
 private:
     MacroblkParser* GetMacroblkParser(void);

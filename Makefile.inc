@@ -10,7 +10,7 @@ INCLUDES = $(foreach dir, $(INCDIRS), -I$(ROOT)/$(dir))
 
 SRCEXT = cpp
 
-CXXFLAGS = -std=c++14
+CXXFLAGS = -std=c++14 -DDBG
 OPT = -g
 RM = rm -rf
 

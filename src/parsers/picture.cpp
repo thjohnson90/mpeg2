@@ -13,6 +13,7 @@ using namespace std;
 #include "extension.h"
 #include "user.h"
 #include "gop.h"
+#include "macroblk.h"
 #include "slice.h"
 #include "picture.h"
 #include "doorbell.h"
@@ -31,17 +32,21 @@ PictureParser::PictureParser(BitBuffer& bb, StreamState& ss) :
 
 PictureParser::~PictureParser()
 {
+    Destroy();
 }
 
-uint32_t PictureParser::Initialize(void)
+int32_t PictureParser::Initialize(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	// create parsers
 	if (nullptr == _sliceParser) {
 	    try {
 		_sliceParser = GetSliceParser();
+		if (nullptr != _sliceParser) {
+		    _sliceParser->Initialize();
+		}
 	    } catch (std::bad_alloc) {
 		Destroy();
 		status = -1;
@@ -53,20 +58,24 @@ uint32_t PictureParser::Initialize(void)
     return status;
 }
 
-uint32_t PictureParser::Destroy(void)
+int32_t PictureParser::Destroy(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
+	if (nullptr != _sliceParser) {
+	    _sliceParser->Destroy();
+	}
+	delete _sliceParser;
+	_sliceParser = nullptr;
     } while (0);
 
     return status;
 }
 
-uint32_t PictureParser::ParsePictureHdr(void)
+int32_t PictureParser::ParsePictureHdr(void)
 {
-    uint32_t     status  = 0;
-    uint32_t     marker  = 0;
+    int32_t  status  = 0;
     
     do {
         PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(_streamState);
@@ -95,7 +104,7 @@ uint32_t PictureParser::ParsePictureHdr(void)
             picData->picHdr.back_f_code = _bitBuffer.GetBits(3);
         }
         
-        while (1 == _bitBuffer.PeekBits(1, status) && 0 <= status) {
+        while (1 == _bitBuffer.PeekBits(1)) {
 	    picData->picHdr.extra_bit_pict  = _bitBuffer.GetBits(1);
             picData->picHdr.extra_info_pict = _bitBuffer.GetBits(8);
 	    // TODO: do something with extra_info_pict data
@@ -112,10 +121,9 @@ uint32_t PictureParser::ParsePictureHdr(void)
     return status;
 }
 
-uint32_t PictureParser::ParsePictCodingExt(void)
+int32_t PictureParser::ParsePictCodingExt(void)
 {
-    uint32_t status = 0;
-    uint32_t marker = 0;
+    int32_t  status = 0;
     
     do {
         PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(_streamState);
@@ -163,16 +171,19 @@ uint32_t PictureParser::ParsePictCodingExt(void)
     return status;
 }
 
-uint32_t PictureParser::ParsePictData(void)
+int32_t PictureParser::ParsePictData(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
     
     do {
 	do {
+#if 0
 	    status = _sliceParser->ParseSliceData();
 	    if (-1 == status) {
 		break;
 	    }
+#endif
+	    _bitBuffer.GetNextStartCode();
 	} while ((StreamState::slice_start_min < _bitBuffer.GetLastStartCode()) &&
 		 (StreamState::slice_start_max >= _bitBuffer.GetLastStartCode()));
     } while (0);

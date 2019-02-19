@@ -19,9 +19,9 @@ Thread::~Thread()
     Destroy();
 }
 
-uint32_t Thread::Initialize(void* (*func)(void*), void* arg)
+int32_t Thread::Initialize(void* (*func)(void*), void* arg)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	status = pthread_create(&_thrdId, 0, func, arg);
@@ -30,9 +30,9 @@ uint32_t Thread::Initialize(void* (*func)(void*), void* arg)
     return status;
 }
 
-uint32_t Thread::Destroy(void)
+int32_t Thread::Destroy(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
     } while (0);
@@ -40,9 +40,9 @@ uint32_t Thread::Destroy(void)
     return status;
 }
 
-uint32_t Thread::Ring(uint32_t cmd)
+int32_t Thread::Ring(uint32_t cmd)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	_cmd = cmd;
@@ -52,9 +52,9 @@ uint32_t Thread::Ring(uint32_t cmd)
     return status;
 }
 
-uint32_t Thread::Listen(void)
+int32_t Thread::Listen(void)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	status = _bell.Listen();
@@ -63,9 +63,9 @@ uint32_t Thread::Listen(void)
     return status;
 }
 
-uint32_t Thread::Join(void** retval)
+int32_t Thread::Join(void** retval)
 {
-    uint32_t status = 0;
+    int32_t status = 0;
 
     do {
 	status = pthread_join(_thrdId, retval);

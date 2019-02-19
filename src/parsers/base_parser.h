@@ -10,14 +10,14 @@ public:
     BaseParser(FileBitBuffer& fbb, BufBitBuffer& bbb, StreamState& ss);
     ~BaseParser();
     
-    uint32_t Initialize(void);
-    uint32_t Destroy(void);
+    int32_t Initialize(void);
+    int32_t Destroy(void);
     uint32_t ParseVideoSequence(void);
-    uint32_t ParseMPEG2Stream(void);
-    uint32_t ParseExtensionUserData(uint32_t flag);
-    uint32_t Ring(uint32_t cmd) {_cmd = cmd; return _bell.Ring();}
-    uint32_t WorkerListen(void) {return _worker.Listen();}
-    uint32_t GetWorkerCmd(void) {return _worker.GetCmd();}
+    int32_t ParseMPEG2Stream(void);
+    int32_t ParseExtensionUserData(uint32_t flag);
+    int32_t Ring(uint32_t cmd) {_cmd = cmd; return _bell.Ring();}
+    int32_t WorkerListen(void) {return _worker.Listen();}
+    int32_t GetWorkerCmd(void) {return _worker.GetCmd();}
     
 protected:
     PackHdrParser*    GetPackHdrParser(void);

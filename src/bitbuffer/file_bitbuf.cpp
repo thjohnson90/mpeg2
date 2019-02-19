@@ -23,7 +23,7 @@ uint32_t FileBitBuffer::GetByte(void)
     return GetBits(BITS_IN_BYTE);
 }
 
-uint32_t FileBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
+int32_t FileBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
 {
     uint32_t status = 0;
     uint32_t index  = 0;
@@ -33,7 +33,7 @@ uint32_t FileBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
             status = -1;
             break;
         }
-
+	
 	// use up bits in the bit buffer first
         while (BITS_IN_BYTE <= _bitBufCnt && 0 != len)
         {
@@ -41,10 +41,23 @@ uint32_t FileBitBuffer::GetBytes(uint8_t* buf, uint32_t len)
             len--;
             index++;
         }
-
+	
 	// if we need more bytes read directly from the file
 	if (0 != len) {
+#ifdef DBG
+	    cout << "Start File Pos: 0x" << hex << _inFile.tellg() << endl;
+	    if (0xbe1016 == _inFile.tellg()) {
+		cout << "got here!" << endl;
+	    }
+	    
+#endif
 	    _inFile.read(reinterpret_cast<char*>(&buf[index]), len);
+#ifdef DBG
+	    cout << "End File Pos: 0x" << hex << _inFile.tellg() << endl;
+	    if (0xBE1800 == _inFile.tellg()) {
+		cout << "got here too" << endl;
+	    }
+#endif
 	    // if we got here the bit buffer is empty (GetBitCount() will return 0)
 	    if (_inFile.eof() || _inFile.fail()) {
 		status = -1;
@@ -84,15 +97,14 @@ uint32_t FileBitBuffer::GetBits(uint32_t bitCnt)
     return static_cast<uint32_t>(tmp);
 }
 
-uint32_t FileBitBuffer::PeekBits(uint32_t bitCnt, uint32_t& status)
+uint32_t FileBitBuffer::PeekBits(uint32_t bitCnt)
 {
     uint64_t bits = 0;
     
     do {
         if (bitCnt > _bitBufCnt) {
-            if (0 > FillBitBuffer()) {
+            if (-1 == FillBitBuffer()) {
 		// reached eof and bit buffer is empty
-		status = -1;
 		break;
 	    }
         }
@@ -106,7 +118,7 @@ uint32_t FileBitBuffer::PeekBits(uint32_t bitCnt, uint32_t& status)
     return static_cast<uint32_t>(bits);
 }
 
-uint32_t FileBitBuffer::FillBitBuffer()
+int32_t FileBitBuffer::FillBitBuffer()
 {
     uint32_t status    = 0;
     uint32_t newBitCnt = 0;

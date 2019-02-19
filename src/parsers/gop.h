@@ -5,7 +5,7 @@ class GopHdrParser
 {
 public:
     GopHdrParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ParseGopHdr(void);
+    int32_t ParseGopHdr(void);
     
 private:
     BitBuffer&   _bitBuffer;

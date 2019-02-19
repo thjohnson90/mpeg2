@@ -8,18 +8,13 @@ public:
     ~BufBitBuffer();
 
     virtual uint32_t GetByte(void);
-    virtual uint32_t GetBytes(uint8_t* buf, uint32_t len);
+    virtual int32_t  GetBytes(uint8_t* buf, uint32_t len);
     virtual uint32_t GetBits(uint32_t bitCnt);
-    virtual uint32_t PeekBits(uint32_t bitCnt, uint32_t& status);
-    virtual uint32_t FillBitBuffer(void);
+    virtual uint32_t PeekBits(uint32_t bitCnt);
+    virtual int32_t  FillBitBuffer(void);
     
     uint8_t* GetEmptyBuffer(uint32_t sz);
-    uint32_t SetBaseParser(BaseParser* bp) {
-      if (nullptr == bp) {
-	return -1;
-      }
-      _bparser = bp;
-    }
+    int32_t SetBaseParser(BaseParser* bp);
     
 private:
     uint8_t*    _rawBuf;

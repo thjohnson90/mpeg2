@@ -5,10 +5,10 @@ class SeqHdrParser
 {
 public:
     SeqHdrParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ParseSequenceHdr(void);
+    int32_t ParseSequenceHdr(void);
     
 protected:
-    uint32_t LoadQuantMatrix(uint8_t (&q)[64]);
+    int32_t LoadQuantMatrix(uint8_t (&q)[64]);
     
 private:
     BitBuffer&   _bitBuffer;

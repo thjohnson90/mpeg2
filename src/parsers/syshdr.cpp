@@ -11,9 +11,9 @@ SystemHdrParser::SystemHdrParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb
 {
 }
 
-uint32_t SystemHdrParser::ParseSystemHdr(void)
+int32_t SystemHdrParser::ParseSystemHdr(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
     
     do {
@@ -39,7 +39,7 @@ uint32_t SystemHdrParser::ParseSystemHdr(void)
 
         struct stream_id_syshdr** ppStrmId = &_streamState.sysHdr.pNextStrmId;
 
-        while (1 == _bitBuffer.PeekBits(1, status) && 0 <= status) {
+        while (1 == _bitBuffer.PeekBits(1) && 0 <= status) {
             *ppStrmId = new struct stream_id_syshdr;
             if (0 != *ppStrmId) {
                 (*ppStrmId)->stream_id                    = _bitBuffer.GetBits(8);

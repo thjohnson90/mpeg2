@@ -5,7 +5,7 @@ class SystemHdrParser
 {
 public:
     SystemHdrParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ParseSystemHdr(void);
+    int32_t ParseSystemHdr(void);
     
 private:
     BitBuffer&   _bitBuffer;

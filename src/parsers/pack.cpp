@@ -10,9 +10,9 @@ PackHdrParser::PackHdrParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _
 {
 }
 
-uint32_t PackHdrParser::ParsePackHdr(void)
+int32_t PackHdrParser::ParsePackHdr(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
     
     do

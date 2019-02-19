@@ -7,10 +7,10 @@ public:
     Doorbell();
     ~Doorbell();
 
-    uint32_t LockBell(void);
-    uint32_t UnlockBell(void);
-    uint32_t Ring(void);
-    uint32_t Listen(void);
+    int32_t LockBell(void);
+    int32_t UnlockBell(void);
+    int32_t Ring(void);
+    int32_t Listen(void);
     
 private:
     bool              _isLocked;

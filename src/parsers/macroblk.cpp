@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdint.h>
 
 using namespace std;
@@ -7,29 +6,30 @@ using namespace std;
 #include "bitbuf.h"
 #include "picdata.h"
 #include "macroblk.h"
-#include "slice.h"
+//#include "slice.h"
 
-SliceParser::SliceParser(BitBuffer& bb, StreamState& ss) :
+MacroblkParser::MacroblkParser(BitBuffer& bb, StreamState& ss) :
     _macroblkParser(nullptr), _bitBuffer(bb), _streamState(ss)
 {
 }
 
-SliceParser::~SliceParser()
+MacroblkParser::~MacroblkParser()
 {
     Destroy();
 }
 
-int32_t SliceParser::Initialize(void)
+int32_t MacroblkParser::Initialize(void)
 {
     int32_t status = 0;
 
+#if 0
     do {
 	// create parsers
 	if (nullptr == _macroblkParser) {
 	    try {
 		_macroblkParser = GetMacroblkParser();
 		if (nullptr != _macroblkParser) {
-		    _macroblkParser->Initialize();
+		    _macroblkParser->Initalize();
 		}
 	    } catch (std::bad_alloc) {
 		Destroy();
@@ -38,14 +38,16 @@ int32_t SliceParser::Initialize(void)
 	    }
 	}
     } while (0);
-
+#endif
+    
     return status;
 }
 
-int32_t SliceParser::Destroy(void)
+int32_t MacroblkParser::Destroy(void)
 {
     int32_t status = 0;
 
+#if 0
     do {
 	if (nullptr != _macroblkParser) {
 	    _macroblkParser->Destroy();
@@ -53,11 +55,12 @@ int32_t SliceParser::Destroy(void)
 	delete _macroblkParser;
 	_macroblkParser = nullptr;
     } while (0);
-
+#endif
+    
     return status;
 }
 
-int32_t SliceParser::ParseSliceData(void)
+int32_t MacroblkParser::ParseMacroblkData(void)
 {
     int32_t      status  = 0;
     uint32_t     marker  = 0;
@@ -77,6 +80,7 @@ int32_t SliceParser::ParseSliceData(void)
             break;
         }
         
+#if 0
         if (2800 < _streamState.seqHdr.vertical_sz) {
             picData->sliceData.slice_vertical_position_ext = _bitBuffer.GetBits(3);
         }
@@ -90,11 +94,11 @@ int32_t SliceParser::ParseSliceData(void)
 
 	picData->sliceData.quantizer_scale_code = _bitBuffer.GetBits(5);
 
-	if (1 == _bitBuffer.PeekBits(1)) {
+	if (1 == _bitBuffer.PeekBits(1, status)) {
 	    picData->sliceData.intra_slice_flag = _bitBuffer.GetBits(1);
 	    picData->sliceData.intra_slice      = _bitBuffer.GetBits(1);
 	    picData->sliceData.reserved         = _bitBuffer.GetBits(7);
-	    while (1 == _bitBuffer.PeekBits(1)) {
+	    while (1 == _bitBuffer.PeekBits(1, status)) {
 		picData->sliceData.extra_bit_slice         = _bitBuffer.GetBits(1);
 		picData->sliceData.extra_information_slice = _bitBuffer.GetBits(8);
 	    }
@@ -102,16 +106,17 @@ int32_t SliceParser::ParseSliceData(void)
 
 	picData->sliceData.extra_bit_slice = _bitBuffer.GetBits(1);
 	do {
-//	    _macroblkParser->ParseMacroblock();
-	} while (0 == _bitBuffer.PeekBits(23));
+	    _macroblkParser->ParseMacroblock();
+	} while (0 == _bitBuffer.PeekBits(23);
+#endif		 
 	
-	_bitBuffer.GetNextStartCode();
+//	_bitBuffer.GetNextStartCode();
     } while (0);
     
     return status;
 }
 
-MacroblkParser* SliceParser::GetMacroblkParser(void)
+MacroblkParser* MacroblkParser::GetMacroblkParser(void)
 {
     if (nullptr == _macroblkParser) {
         _macroblkParser = new MacroblkParser(_bitBuffer, _streamState);

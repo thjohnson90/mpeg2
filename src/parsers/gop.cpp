@@ -10,9 +10,9 @@ GopHdrParser::GopHdrParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _st
 {
 }
 
-uint32_t GopHdrParser::ParseGopHdr(void)
+int32_t GopHdrParser::ParseGopHdr(void)
 {
-    uint32_t status = 0;
+    int32_t  status = 0;
     uint32_t marker = 0;
     
     do {

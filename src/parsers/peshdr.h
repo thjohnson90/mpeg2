@@ -5,7 +5,7 @@ class PesHeaderParser
 {
 public:
     PesHeaderParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ParsePesHdr(void);
+    int32_t ParsePesHdr(void);
     
 private:
     BitBuffer&   _bitBuffer;
@@ -16,12 +16,12 @@ class PesPacketParser
 {
 public:
     PesPacketParser(BitBuffer& bb, StreamState& ss);
-    uint32_t ChoosePesPacketParser(void);
+    int32_t ChoosePesPacketParser(void);
     
 protected:
-    uint32_t ParsePesPacket(void);
-    uint32_t ParsePesPadding(void);
-    uint32_t ParsePesDataBytes(void);
+    int32_t ParsePesPacket(void);
+    int32_t ParsePesPadding(void);
+    int32_t ParsePesDataBytes(void);
     
 private:
     BitBuffer&   _bitBuffer;
