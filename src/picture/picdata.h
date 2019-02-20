@@ -68,9 +68,18 @@ struct SliceData
     uint32_t quantizer_scale_code        : 5;
     uint32_t intra_slice_flag            : 1;
     uint32_t intra_slice                 : 1;
-    uint32_t reserved                    : 7;
     uint32_t extra_bit_slice             : 1;
     uint32_t extra_information_slice     : 8;
+};
+
+struct MacroblkData
+{
+    MacroblkData();
+    void ResetData();
+
+    uint32_t macroblock_escape      : 11;
+    uint32_t macroblock_address_inc : 11;
+    uint32_t quantiser_scale_code   : 5;
 };
 
 struct PictureData
@@ -81,6 +90,7 @@ struct PictureData
     struct PictureHeader          picHdr;
     struct PictureCodingExtension picCodingExt;
     struct SliceData              sliceData;
+    struct MacroblkData           macroblkData;
 };
 
 class PictureDataMgr

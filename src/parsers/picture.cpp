@@ -177,12 +177,10 @@ int32_t PictureParser::ParsePictData(void)
     
     do {
 	do {
-#if 0
 	    status = _sliceParser->ParseSliceData();
 	    if (-1 == status) {
 		break;
 	    }
-#endif
 	    _bitBuffer.GetNextStartCode();
 	} while ((StreamState::slice_start_min < _bitBuffer.GetLastStartCode()) &&
 		 (StreamState::slice_start_max >= _bitBuffer.GetLastStartCode()));

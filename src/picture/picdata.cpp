@@ -76,21 +76,40 @@ void PictureCodingExtension::ResetData(void)
     sub_carrier_phase    = 0;
 }
 
-SliceData::SliceData() : slice_vertical_position_ext(0)
+SliceData::SliceData() :
+    slice_vertical_position_ext(0),
+    priority_breakpoint(0),
+    quantizer_scale_code(0),
+    intra_slice_flag(0),
+    intra_slice(0),
+    extra_bit_slice(0),
+    extra_information_slice(0)
+{
+}
+
+void SliceData::ResetData(void)
 {
     slice_vertical_position_ext = 0;
     priority_breakpoint         = 0;
     quantizer_scale_code        = 0;
     intra_slice_flag            = 0;
     intra_slice                 = 0;
-    reserved                    = 0;
     extra_bit_slice             = 0;
     extra_information_slice     = 0;
 }
 
-void SliceData::ResetData(void)
+MacroblkData::MacroblkData() :
+    macroblock_escape(0),
+    macroblock_address_inc(0),
+    quantiser_scale_code(0)
 {
-    slice_vertical_position_ext = 0;
+}
+
+void MacroblkData::ResetData(void)
+{
+    macroblock_escape      = 0;
+    macroblock_address_inc = 0;
+    quantiser_scale_code   = 0;
 }
 
 PictureDataMgr* PictureDataMgr::_PictureDataMgr = 0;
@@ -104,6 +123,7 @@ void PictureData::NullPictureData(void)
     picHdr.ResetData();
     picCodingExt.ResetData();
     sliceData.ResetData();
+    macroblkData.ResetData();
 }
 
 PictureDataMgr::PictureDataMgr(StreamState& ss) : _frontBuf(0), _backBuf(0), _strmState(ss)

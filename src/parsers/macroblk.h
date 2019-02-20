@@ -14,6 +14,7 @@ public:
     
 private:
     MacroblkParser* GetMacroblkParser(void);
+    uint32_t        GetMacroblkAddrInc(void);
     
     MacroblkParser* _macroblkParser;
     BitBuffer&      _bitBuffer;
