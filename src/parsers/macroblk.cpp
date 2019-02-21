@@ -78,7 +78,7 @@ int32_t MacroblkParser::ParseMacroblkData(void)
         }
         
 	// do we really need another buffer - already got one when parsing the pic header
-        picData = picDataMgr->GetNextBuffer();
+        picData = picDataMgr->GetCurrentBuffer();
         if (0 == picData) {
             status = -1;
             break;
@@ -89,37 +89,32 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	}
 
 	picData->macroblkData.macroblock_address_inc = GetMacroblkAddrInc();
-	status = GetMacroblkMode(picData);
+	status = GetMacroblkModes(picData);
 
-#if 0
-        if (2800 < _streamState.seqHdr.vertical_sz) {
-            picData->sliceData.slice_vertical_position_ext = _bitBuffer.GetBits(3);
-        }
-
-	if (true == _streamState.extData.seqScalExt.present) {
-	    if (sequence_scalable_extension::data_partitioning ==
-		_streamState.extData.seqScalExt.scalable_mode) {
-		picData->sliceData.priority_breakpoint = _bitBuffer.GetBits(7);
-	    }
+	if (1 == picData->macroblkData.macroblock_quant) {
+	    picData->macroblkData.quantiser_scale_code = _bitBuffer.GetBits(5);
 	}
 
-	picData->sliceData.quantizer_scale_code = _bitBuffer.GetBits(5);
+//	if (1 == picData->macroblkData.macroblock_motion_forw ||
+//	    (1 == picData->macroblkData.macroblock_intra && concealment_motion_vectors)) {
+//	    motion_vectors(0);
+//	}
 
-	if (1 == _bitBuffer.PeekBits(1, status)) {
-	    picData->sliceData.intra_slice_flag = _bitBuffer.GetBits(1);
-	    picData->sliceData.intra_slice      = _bitBuffer.GetBits(1);
-	    picData->sliceData.reserved         = _bitBuffer.GetBits(7);
-	    while (1 == _bitBuffer.PeekBits(1, status)) {
-		picData->sliceData.extra_bit_slice         = _bitBuffer.GetBits(1);
-		picData->sliceData.extra_information_slice = _bitBuffer.GetBits(8);
-	    }
+	if (1 == picData->macroblkData.macroblock_motion_back) {
+//	    motion_vectors(1);
 	}
 
-	picData->sliceData.extra_bit_slice = _bitBuffer.GetBits(1);
-	do {
-	    _macroblkParser->ParseMacroblock();
-	} while (0 == _bitBuffer.PeekBits(23);
-#endif		 
+//	if (1 == picData->macroblkData.macroblock_intra && concealment_motion_vectors) {
+//	    marker = _bitBuffer.GetBits(1);
+//	}
+
+	if (1 == picData->macroblkData.macroblock_pattern) {
+//	    coded_block_pattern();
+	}
+
+//	for (uint32_t i = 0; i < block_count; i++) {
+//	    block(i);
+//	}
 	
 	_bitBuffer.GetNextStartCode();
     } while (0);
@@ -265,7 +260,7 @@ uint32_t MacroblkParser::GetMacroblkAddrInc(void)
     return addrInc;
 }
 
-int32_t MacroblkParser::GetMacroblkMode(PictureData* picData)
+int32_t MacroblkParser::GetMacroblkModes(PictureData* picData)
 {
     uint32_t status = 0;
 
@@ -287,6 +282,32 @@ int32_t MacroblkParser::GetMacroblkMode(PictureData* picData)
 	    cout << "Invalid picture coding type 0x" << hex << picData->picHdr.picture_coding_type << endl;
 	    status = -1;
 	    break;
+	}
+
+	if (-1 == status) {
+	  break;
+	}
+
+	if ((1 == picData->macroblkData.spatial_temporal_weight_code_flag) &&
+	    (0 != _streamState.extData.pictSpatScalExt.spat_temp_wt_cd_tbl_idx)) {
+	    picData->macroblkData.spatial_temporal_weight_code = _bitBuffer.GetBits(2);
+	}
+
+	if (1 == picData->macroblkData.macroblock_motion_forw ||
+	    1 == picData->macroblkData.macroblock_motion_back) {
+	    if (PictureCodingExtension::PIC_STRUCT_FRAME == picData->picCodingExt.picture_struct) {
+		if (0 == picData->picCodingExt.frame_pred_frame_dct) {
+		    picData->macroblkData.frame_motion_type = _bitBuffer.GetBits(2);
+		}
+	    } else {
+		picData->macroblkData.field_motion_type = _bitBuffer.GetBits(2);
+	    }
+	}
+
+	if (PictureCodingExtension::PIC_STRUCT_FRAME == picData->picCodingExt.picture_struct &&
+	    0 == picData->picCodingExt.frame_pred_frame_dct &&
+	    (1 == picData->macroblkData.macroblock_intra || 1 == picData->macroblkData.macroblock_pattern)) {
+	    picData->macroblkData.dct_type = _bitBuffer.GetBits(1);
 	}
     } while (0);
 

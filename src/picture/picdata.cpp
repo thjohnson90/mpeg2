@@ -106,7 +106,11 @@ MacroblkData::MacroblkData() :
     macroblock_motion_back(0),
     macroblock_pattern(0),
     macroblock_intra(0),
-    spatial_temporal_weight_code_flag(0)
+    spatial_temporal_weight_code_flag(0),
+    spatial_temporal_weight_code(0),
+    frame_motion_type(0),
+    field_motion_type(0),
+    dct_type(0)
 {
 }
 
@@ -120,6 +124,10 @@ void MacroblkData::ResetData(void)
     macroblock_pattern                = 0;
     macroblock_intra                  = 0;
     spatial_temporal_weight_code_flag = 0;
+    spatial_temporal_weight_code      = 0;
+    frame_motion_type                 = 0;
+    field_motion_type                 = 0;
+    dct_type                          = 0;
 }
 
 PictureDataMgr* PictureDataMgr::_PictureDataMgr = 0;
@@ -182,5 +190,18 @@ PictureData* PictureDataMgr::GetNextBuffer(void)
         pictureData->NullPictureData();
     }
     
+    return pictureData;
+}
+
+PictureData* PictureDataMgr::GetCurrentBuffer(void)
+{
+    PictureData* pictureData = 0;
+
+    if (0 == _backBuf) {
+	pictureData = GetNextBuffer();
+    } else {
+	pictureData = _backBuf;
+    }
+
     return pictureData;
 }

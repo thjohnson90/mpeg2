@@ -85,6 +85,10 @@ struct MacroblkData
     uint32_t macroblock_pattern                : 1;
     uint32_t macroblock_intra                  : 1;
     uint32_t spatial_temporal_weight_code_flag : 1;
+    uint32_t spatial_temporal_weight_code      : 2;
+    uint32_t frame_motion_type                 : 2;
+    uint32_t field_motion_type                 : 2;
+    uint32_t dct_type                          : 1;
 };
 
 struct PictureData
@@ -107,6 +111,7 @@ public:
     static PictureDataMgr* GetPictureDataMgr(StreamState& ss);
     void                   ReleasePictureDataMgr(void);
     PictureData*           GetNextBuffer(void);
+    PictureData*           GetCurrentBuffer(void);
     PictureData*           GetBackBuffer(void) {return _backBuf;}
     PictureData*           GetFrontBuffer(void) {return _frontBuf;}
     

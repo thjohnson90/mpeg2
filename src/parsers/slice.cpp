@@ -71,7 +71,7 @@ int32_t SliceParser::ParseSliceData(void)
         }
         
 	// do we really need another buffer - already got one when parsing the pic header
-        picData = picDataMgr->GetNextBuffer();
+        picData = picDataMgr->GetCurrentBuffer();
         if (0 == picData) {
             status = -1;
             break;
