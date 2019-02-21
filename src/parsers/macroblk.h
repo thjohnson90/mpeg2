@@ -15,7 +15,11 @@ public:
 private:
     MacroblkParser* GetMacroblkParser(void);
     uint32_t        GetMacroblkAddrInc(void);
-    
+    int32_t         GetMacroblkMode(PictureData* picData);
+    int32_t         MbModeIPic(PictureData* picData);
+    int32_t         MbModePPic(PictureData* picData);
+    int32_t         MbModeBPic(PictureData* picData);
+
     MacroblkParser* _macroblkParser;
     BitBuffer&      _bitBuffer;
     StreamState&    _streamState;

@@ -99,17 +99,27 @@ void SliceData::ResetData(void)
 }
 
 MacroblkData::MacroblkData() :
-    macroblock_escape(0),
     macroblock_address_inc(0),
-    quantiser_scale_code(0)
+    quantiser_scale_code(0),
+    macroblock_quant(0),
+    macroblock_motion_forw(0),
+    macroblock_motion_back(0),
+    macroblock_pattern(0),
+    macroblock_intra(0),
+    spatial_temporal_weight_code_flag(0)
 {
 }
 
 void MacroblkData::ResetData(void)
 {
-    macroblock_escape      = 0;
-    macroblock_address_inc = 0;
-    quantiser_scale_code   = 0;
+    macroblock_address_inc            = 0;
+    quantiser_scale_code              = 0;
+    macroblock_quant                  = 0;
+    macroblock_motion_forw            = 0;
+    macroblock_motion_back            = 0;
+    macroblock_pattern                = 0;
+    macroblock_intra                  = 0;
+    spatial_temporal_weight_code_flag = 0;
 }
 
 PictureDataMgr* PictureDataMgr::_PictureDataMgr = 0;

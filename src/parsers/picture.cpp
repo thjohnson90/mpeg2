@@ -13,6 +13,7 @@ using namespace std;
 #include "extension.h"
 #include "user.h"
 #include "gop.h"
+#include "picdata.h"
 #include "macroblk.h"
 #include "slice.h"
 #include "picture.h"
@@ -21,7 +22,6 @@ using namespace std;
 #include "base_parser.h"
 #include "file_bitbuf.h"
 #include "buf_bitbuf.h"
-#include "picdata.h"
 
 PictureParser::PictureParser(BitBuffer& bb, StreamState& ss) :
     _sliceParser(nullptr),

@@ -14,6 +14,7 @@ using namespace std;
 #include "extension.h"
 #include "user.h"
 #include "gop.h"
+#include "picdata.h"
 #include "macroblk.h"
 #include "slice.h"
 #include "picture.h"

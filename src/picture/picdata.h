@@ -77,9 +77,14 @@ struct MacroblkData
     MacroblkData();
     void ResetData();
 
-    uint32_t macroblock_escape      : 11;
-    uint32_t macroblock_address_inc : 11;
-    uint32_t quantiser_scale_code   : 5;
+    uint32_t macroblock_address_inc            : 6;
+    uint32_t quantiser_scale_code              : 5;
+    uint32_t macroblock_quant                  : 1;
+    uint32_t macroblock_motion_forw            : 1;
+    uint32_t macroblock_motion_back            : 1;
+    uint32_t macroblock_pattern                : 1;
+    uint32_t macroblock_intra                  : 1;
+    uint32_t spatial_temporal_weight_code_flag : 1;
 };
 
 struct PictureData
