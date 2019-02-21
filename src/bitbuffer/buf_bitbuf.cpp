@@ -12,6 +12,7 @@
 #include "user.h"
 #include "gop.h"
 #include "picdata.h"
+#include "motvecs.h"
 #include "macroblk.h"
 #include "slice.h"
 #include "picture.h"

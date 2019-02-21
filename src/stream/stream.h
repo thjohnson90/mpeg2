@@ -117,6 +117,13 @@ struct sequence_header
 struct sequence_extension
 {
     sequence_extension();
+
+    enum {
+	CHROMA_FMT_RESERVED = 0,
+	CHROMA_FMT_420      = 1,
+	CHROMA_FMT_422      = 2,
+	CHROMA_FMT_444      = 3
+    };
     
     // sequence extension
     uint32_t profile_level        : 8;

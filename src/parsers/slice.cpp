@@ -6,6 +6,7 @@ using namespace std;
 #include "stream.h"
 #include "bitbuf.h"
 #include "picdata.h"
+#include "motvecs.h"
 #include "macroblk.h"
 #include "slice.h"
 

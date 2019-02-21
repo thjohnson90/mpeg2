@@ -110,7 +110,8 @@ MacroblkData::MacroblkData() :
     spatial_temporal_weight_code(0),
     frame_motion_type(0),
     field_motion_type(0),
-    dct_type(0)
+    dct_type(0),
+    block_count(0)
 {
 }
 
@@ -128,6 +129,7 @@ void MacroblkData::ResetData(void)
     frame_motion_type                 = 0;
     field_motion_type                 = 0;
     dct_type                          = 0;
+    block_count                       = 0;
 }
 
 PictureDataMgr* PictureDataMgr::_PictureDataMgr = 0;

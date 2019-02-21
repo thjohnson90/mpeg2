@@ -6,8 +6,8 @@ using namespace std;
 #include "stream.h"
 #include "bitbuf.h"
 #include "picdata.h"
+#include "motvecs.h"
 #include "macroblk.h"
-//#include "slice.h"
 
 MacroblkParser::MacroblkParser(BitBuffer& bb, StreamState& ss) :
     _macroblkParser(nullptr), _bitBuffer(bb), _streamState(ss)
@@ -23,14 +23,13 @@ int32_t MacroblkParser::Initialize(void)
 {
     int32_t status = 0;
 
-#if 0
     do {
 	// create parsers
-	if (nullptr == _macroblkParser) {
+	if (nullptr == _motionvecsParser) {
 	    try {
-		_macroblkParser = GetMacroblkParser();
-		if (nullptr != _macroblkParser) {
-		    _macroblkParser->Initalize();
+		_motionvecsParser = GetMotionVecsParser();
+		if (nullptr != _motionvecsParser) {
+		    _motionvecsParser->Initialize();
 		}
 	    } catch (std::bad_alloc) {
 		Destroy();
@@ -39,7 +38,6 @@ int32_t MacroblkParser::Initialize(void)
 	    }
 	}
     } while (0);
-#endif
     
     return status;
 }
@@ -48,15 +46,13 @@ int32_t MacroblkParser::Destroy(void)
 {
     int32_t status = 0;
 
-#if 0
     do {
-	if (nullptr != _macroblkParser) {
-	    _macroblkParser->Destroy();
+	if (nullptr != _motionvecsParser) {
+	    _motionvecsParser->Destroy();
 	}
-	delete _macroblkParser;
-	_macroblkParser = nullptr;
+	delete _motionvecsParser;
+	_motionvecsParser = nullptr;
     } while (0);
-#endif
     
     return status;
 }
@@ -77,7 +73,6 @@ int32_t MacroblkParser::ParseMacroblkData(void)
             break;
         }
         
-	// do we really need another buffer - already got one when parsing the pic header
         picData = picDataMgr->GetCurrentBuffer();
         if (0 == picData) {
             status = -1;
@@ -95,26 +90,48 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	    picData->macroblkData.quantiser_scale_code = _bitBuffer.GetBits(5);
 	}
 
-//	if (1 == picData->macroblkData.macroblock_motion_forw ||
-//	    (1 == picData->macroblkData.macroblock_intra && concealment_motion_vectors)) {
-//	    motion_vectors(0);
-//	}
-
-	if (1 == picData->macroblkData.macroblock_motion_back) {
-//	    motion_vectors(1);
+	if (1 == picData->macroblkData.macroblock_motion_forw ||
+	    (1 == picData->macroblkData.macroblock_intra &&
+	     picData->picCodingExt.concealment_mot_vecs)) {
+	    _motionvecsParser->ParseMotionVecs(0);
 	}
 
-//	if (1 == picData->macroblkData.macroblock_intra && concealment_motion_vectors) {
-//	    marker = _bitBuffer.GetBits(1);
-//	}
+	if (1 == picData->macroblkData.macroblock_motion_back) {
+	    _motionvecsParser->ParseMotionVecs(1);
+	}
+
+	if (1 == picData->macroblkData.macroblock_intra &&
+	    picData->picCodingExt.concealment_mot_vecs) {
+	    marker = _bitBuffer.GetBits(1);
+	}
 
 	if (1 == picData->macroblkData.macroblock_pattern) {
 //	    coded_block_pattern();
 	}
 
-//	for (uint32_t i = 0; i < block_count; i++) {
+	// get the block count from the chroma format
+	switch(_streamState.extData.seqExt.chroma_format) {
+	case sequence_extension::CHROMA_FMT_420:
+	    picData->macroblkData.block_count = 6;
+	    break;
+
+	case sequence_extension::CHROMA_FMT_422:
+	    picData->macroblkData.block_count = 8;
+	    break;
+
+	case sequence_extension::CHROMA_FMT_444:
+	    picData->macroblkData.block_count = 12;
+	    break;
+
+	default:
+	    picData->macroblkData.block_count = 0;
+	    status = -1;
+	    break;
+	}
+
+	for (uint32_t i = 0; i < picData->macroblkData.block_count; i++) {
 //	    block(i);
-//	}
+	}
 	
 	_bitBuffer.GetNextStartCode();
     } while (0);
@@ -128,6 +145,14 @@ MacroblkParser* MacroblkParser::GetMacroblkParser(void)
         _macroblkParser = new MacroblkParser(_bitBuffer, _streamState);
     }
     return _macroblkParser;
+}
+
+MotionVecsParser* MacroblkParser::GetMotionVecsParser(void)
+{
+    if (nullptr == _motionvecsParser) {
+        _motionvecsParser = new MotionVecsParser(_bitBuffer, _streamState);
+    }
+    return _motionvecsParser;
 }
 
 uint32_t MacroblkParser::GetMacroblkAddrInc(void)

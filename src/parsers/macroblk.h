@@ -13,16 +13,19 @@ public:
     int32_t ParseMacroblkData(void);
     
 private:
-    MacroblkParser* GetMacroblkParser(void);
+    MacroblkParser*   GetMacroblkParser(void);
+    MotionVecsParser* GetMotionVecsParser(void);
+
     uint32_t        GetMacroblkAddrInc(void);
     int32_t         GetMacroblkModes(PictureData* picData);
     int32_t         MbModeIPic(PictureData* picData);
     int32_t         MbModePPic(PictureData* picData);
     int32_t         MbModeBPic(PictureData* picData);
 
-    MacroblkParser* _macroblkParser;
-    BitBuffer&      _bitBuffer;
-    StreamState&    _streamState;
+    MacroblkParser*   _macroblkParser;
+    MotionVecsParser* _motionvecsParser;
+    BitBuffer&        _bitBuffer;
+    StreamState&      _streamState;
 };
 
 #endif

@@ -89,6 +89,7 @@ struct MacroblkData
     uint32_t frame_motion_type                 : 2;
     uint32_t field_motion_type                 : 2;
     uint32_t dct_type                          : 1;
+    uint32_t block_count                       : 4;
 };
 
 struct PictureData
