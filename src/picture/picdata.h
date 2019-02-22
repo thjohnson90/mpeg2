@@ -77,6 +77,11 @@ struct MacroblkData
     MacroblkData();
     void ResetData();
 
+    enum {
+	MVFMT_FIELD = 0,
+	MVFMT_FRAME = 1
+    };
+
     uint32_t macroblock_address_inc            : 6;
     uint32_t quantiser_scale_code              : 5;
     uint32_t macroblock_quant                  : 1;
@@ -92,7 +97,12 @@ struct MacroblkData
     uint32_t spatial_temporal_weight_class     : 3;
     uint32_t spatial_temporal_integer_weight   : 1;
     uint32_t motion_vector_count               : 2;
+    uint32_t mv_format                         : 1;
+    uint32_t dmv                               : 1;
+    
     uint32_t block_count                       : 4;
+
+    uint8_t motion_vertical_field_select[2][2];
 };
 
 struct PictureData

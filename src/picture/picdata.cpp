@@ -114,28 +114,40 @@ MacroblkData::MacroblkData() :
     spatial_temporal_weight_class(0),
     spatial_temporal_integer_weight(0),
     motion_vector_count(0),
+    mv_format(MVFMT_FRAME),
+    dmv(0),
     block_count(0)
 {
+    motion_vertical_field_select[0][0] = 0;
+    motion_vertical_field_select[0][1] = 0;
+    motion_vertical_field_select[1][0] = 0;
+    motion_vertical_field_select[1][1] = 0;
 }
 
 void MacroblkData::ResetData(void)
 {
-    macroblock_address_inc            = 0;
-    quantiser_scale_code              = 0;
-    macroblock_quant                  = 0;
-    macroblock_motion_forw            = 0;
-    macroblock_motion_back            = 0;
-    macroblock_pattern                = 0;
-    macroblock_intra                  = 0;
-    spatial_temporal_weight_code_flag = 0;
-    spatial_temporal_weight_code      = 0;
-    frame_motion_type                 = 0;
-    field_motion_type                 = 0;
-    dct_type                          = 0;
-    spatial_temporal_weight_code      = 0;
-    spatial_temporal_integer_weight   = 0;
-    motion_vector_count               = 0;
-    block_count                       = 0;
+    macroblock_address_inc             = 0;
+    quantiser_scale_code               = 0;
+    macroblock_quant                   = 0;
+    macroblock_motion_forw             = 0;
+    macroblock_motion_back             = 0;
+    macroblock_pattern                 = 0;
+    macroblock_intra                   = 0;
+    spatial_temporal_weight_code_flag  = 0;
+    spatial_temporal_weight_code       = 0;
+    frame_motion_type                  = 0;
+    field_motion_type                  = 0;
+    dct_type                           = 0;
+    spatial_temporal_weight_code       = 0;
+    spatial_temporal_integer_weight    = 0;
+    motion_vector_count                = 0;
+    mv_format                          = MVFMT_FRAME;
+    dmv                                = 0;
+    block_count                        = 0;
+    motion_vertical_field_select[0][0] = 0;
+    motion_vertical_field_select[0][1] = 0;
+    motion_vertical_field_select[1][0] = 0;
+    motion_vertical_field_select[1][1] = 0;
 }
 
 PictureDataMgr* PictureDataMgr::_PictureDataMgr = 0;

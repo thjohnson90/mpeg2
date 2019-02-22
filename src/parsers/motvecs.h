@@ -11,6 +11,7 @@ public:
     int32_t Destroy(void);
     
     int32_t ParseMotionVecs(uint32_t s);
+    int32_t ParseMotionVec(uint32_t r, uint32_t s);
     
 private:
     MotionVecsParser* GetMotionVecsParser(void);

@@ -356,6 +356,7 @@ int32_t MacroblkParser::MbModeIPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (1 == tmp >> 2) {
 		_bitBuffer.GetBits(2);
 		picData->macroblkData.macroblock_quant                  = 1;
@@ -364,6 +365,7 @@ int32_t MacroblkParser::MbModeIPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (3 == tmp) {
 		_bitBuffer.GetBits(4);
 		picData->macroblkData.macroblock_quant                  = 0;
@@ -388,6 +390,7 @@ int32_t MacroblkParser::MbModeIPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 0;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else {
 		status = -1;
 	    }
@@ -539,6 +542,7 @@ int32_t MacroblkParser::MbModePPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (2 == tmp) {
 		_bitBuffer.GetBits(7);
 		picData->macroblkData.macroblock_quant                  = 1;
@@ -547,6 +551,7 @@ int32_t MacroblkParser::MbModePPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (3 == tmp) {
 		_bitBuffer.GetBits(7);
 		picData->macroblkData.macroblock_quant                  = 0;
@@ -555,6 +560,7 @@ int32_t MacroblkParser::MbModePPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 0;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else {
 		status = -1;
 	    }
@@ -778,6 +784,7 @@ int32_t MacroblkParser::MbModeBPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 0;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (0xD == tmp) {
 		_bitBuffer.GetBits(9);
 		picData->macroblkData.macroblock_quant                  = 1;
@@ -786,6 +793,7 @@ int32_t MacroblkParser::MbModeBPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (0xF == tmp) {
 		_bitBuffer.GetBits(9);
 		picData->macroblkData.macroblock_quant                  = 0;
@@ -794,6 +802,7 @@ int32_t MacroblkParser::MbModeBPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
+		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else {
 		status = -1;
 	    }
