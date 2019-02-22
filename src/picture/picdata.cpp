@@ -111,6 +111,9 @@ MacroblkData::MacroblkData() :
     frame_motion_type(0),
     field_motion_type(0),
     dct_type(0),
+    spatial_temporal_weight_class(0),
+    spatial_temporal_integer_weight(0),
+    motion_vector_count(0),
     block_count(0)
 {
 }
@@ -129,6 +132,9 @@ void MacroblkData::ResetData(void)
     frame_motion_type                 = 0;
     field_motion_type                 = 0;
     dct_type                          = 0;
+    spatial_temporal_weight_code      = 0;
+    spatial_temporal_integer_weight   = 0;
+    motion_vector_count               = 0;
     block_count                       = 0;
 }
 

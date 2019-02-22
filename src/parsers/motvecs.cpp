@@ -83,17 +83,69 @@ int32_t MotionVecsParser::ParseMotionVecs(uint32_t s)
             break;
         }
 
+	if (0 == picData->macroblkData.spatial_temporal_weight_code) {
+	    picData->macroblkData.spatial_temporal_integer_weight = 1;
+	} else {
+	    picData->macroblkData.spatial_temporal_integer_weight = 0;
+	}
+	
+	switch(_streamState.extData.pictSpatScalExt.spat_temp_wt_cd_tbl_idx) {
+	case 0:
+	    picData->macroblkData.spatial_temporal_weight_class   = 1;
+	    picData->macroblkData.spatial_temporal_integer_weight = 0;
+	    break;
+	    
+	case 1:
+	    if (0 == picData->macroblkData.spatial_temporal_weight_code & 1) {
+		picData->macroblkData.spatial_temporal_weight_class = 3;
+	    } else {
+		picData->macroblkData.spatial_temporal_weight_class = 1;
+	    }
+	    break;
+	    
+	case 2:
+	    if (0 == picData->macroblkData.spatial_temporal_weight_code & 1) {
+		picData->macroblkData.spatial_temporal_weight_class = 2;
+	    } else {
+		picData->macroblkData.spatial_temporal_weight_class = 1;
+	    }
+	    break;
+
+	case 3:
+	    if (0 == picData->macroblkData.spatial_temporal_weight_code & 2) {
+		picData->macroblkData.spatial_temporal_weight_class = 2;
+	    } else if (2 == picData->macroblkData.spatial_temporal_weight_code) {
+		picData->macroblkData.spatial_temporal_weight_class = 3;
+	    } else {
+		picData->macroblkData.spatial_temporal_weight_class = 1;
+	    }		
+	    break;
+	}
+
 	if (0 != picData->macroblkData.frame_motion_type) {
-	    switch(picData->macroblkData.frame_motion_type) {
+	    picData->macroblkData.motion_vector_count = 1;
+	    if (1 == picData->macroblkData.frame_motion_type) {
+		if (0 == picData->macroblkData.spatial_temporal_weight_class ||
+		    1 == picData->macroblkData.spatial_temporal_weight_class) {
+		    picData->macroblkData.motion_vector_count = 2;
+		}
 	    }
 	}
 	
 	if (0 != picData->macroblkData.field_motion_type) {
-	    switch(picData->macroblkData.field_motion_type) {
+	    picData->macroblkData.motion_vector_count = 1;
+	    if (2 == picData->macroblkData.field_motion_type) {
+		if (0 == picData->macroblkData.spatial_temporal_weight_class ||
+		    1 == picData->macroblkData.spatial_temporal_weight_class) {
+		    picData->macroblkData.motion_vector_count = 2;
+		}
 	    }
 	}
 
-//	_bitBuffer.GetNextStartCode();
+	if (1 == picData->macroblkData.motion_vector_count) {
+	    
+	} else {
+	}
     } while (0);
     
     return status;
