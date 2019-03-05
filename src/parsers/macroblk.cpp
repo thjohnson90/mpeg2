@@ -93,11 +93,11 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	if (1 == picData->macroblkData.macroblock_motion_forw ||
 	    (1 == picData->macroblkData.macroblock_intra &&
 	     picData->picCodingExt.concealment_mot_vecs)) {
-	    _motionvecsParser->ParseMotionVecs(0);
+	    _motionvecsParser->ParseMotionVecs(picData, 0);
 	}
 
 	if (1 == picData->macroblkData.macroblock_motion_back) {
-	    _motionvecsParser->ParseMotionVecs(1);
+	    _motionvecsParser->ParseMotionVecs(picData, 1);
 	}
 
 	if (1 == picData->macroblkData.macroblock_intra &&

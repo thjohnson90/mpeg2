@@ -150,6 +150,28 @@ void MacroblkData::ResetData(void)
     motion_vertical_field_select[1][1] = 0;
 }
 
+MotionVecData::MotionVecData()
+{
+    for (int i = 0; i < 2; i++) {
+	for (int j = 0; j < 2; j++) {
+	    for (int k = 0; k < 2; k++) {
+		motion_code[i][j][k] = 0;
+	    }
+	}
+    }
+}
+
+void MotionVecData::ResetData(void)
+{
+    for (int i = 0; i < 2; i++) {
+	for (int j = 0; j < 2; j++) {
+	    for (int k = 0; k < 2; k++) {
+		motion_code[i][j][k] = 0;
+	    }
+	}
+    }
+}
+
 PictureDataMgr* PictureDataMgr::_PictureDataMgr = 0;
 
 PictureData::PictureData()

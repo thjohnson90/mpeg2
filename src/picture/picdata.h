@@ -105,6 +105,13 @@ struct MacroblkData
     uint8_t motion_vertical_field_select[2][2];
 };
 
+struct MotionVecData {
+    MotionVecData();
+    void ResetData();
+
+    int32_t motion_code[2][2][2];
+};
+
 struct PictureData
 {
     PictureData();
@@ -114,6 +121,7 @@ struct PictureData
     struct PictureCodingExtension picCodingExt;
     struct SliceData              sliceData;
     struct MacroblkData           macroblkData;
+    struct MotionVecData          mvData;
 };
 
 class PictureDataMgr
