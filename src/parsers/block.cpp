@@ -268,8 +268,6 @@ int32_t BlockParser::CodedBlkPattern(PictureData* picData)
 	    _streamState.extData.seqExt.chroma_format) {
 	    picData->macroblkData.coded_block_pattern_2 = _bitBuffer.GetBits(6);
 	}
-
-	GetPatternCode(picData);
     } while(0);
 
     return status;
@@ -277,7 +275,44 @@ int32_t BlockParser::CodedBlkPattern(PictureData* picData)
 
 int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 {
-    return 0;
+    int32_t status = 0;
+
+    do {
+	GetPatternCode(picData);
+
+	if (1 == picData->blkData.pattern_code[blkcnt]) {
+	    if (1 == picData->macroblkData.macroblock_intra) {
+		if (blkcnt < 4) {
+		    status = GetDctSizeLuminance(picData);
+		    if (-1 == status) {
+			break;
+		    }
+		    if (0 != picData->blkData.dct_dc_size_luminance) {
+			picData->blkData.dct_dc_differential_lum =
+			    _bitBuffer.GetBits(picData->blkData.dct_dc_size_luminance);
+		    }
+		} else {
+		    status = GetDctSizeChromiance(picData);
+		    if (-1 == status) {
+			break;
+		    }
+		    if (0 != picData->blkData.dct_dc_size_chrominance) {
+			picData->blkData.dct_dc_differential_chrom =
+			    _bitBuffer.GetBits(picData->blkData.dct_dc_size_chrominance);
+		    }
+		}
+	    } else {
+		// First DCT coefficient
+	    }
+
+	    //while (_bitBuffer.PeekBits() != EOB) {
+		// Subsequent DCT coefficients
+	    //}
+	    //_bitBuffer.GetBits();  // EOB
+	}
+    } while (0);
+
+    return status;
 }
 
 int32_t BlockParser::GetPatternCode(PictureData* picData)
@@ -327,3 +362,117 @@ int32_t BlockParser::GetPatternCode(PictureData* picData)
 
     return status;
 }
+
+int32_t BlockParser::GetDctSizeLuminance(PictureData* picData)
+{
+    int32_t  status = 0;
+    uint32_t bits   = 0;
+
+    do {
+	bits = _bitBuffer.PeekBits(9);
+
+	if (4 == (bits >> 6)) {
+	    _bitBuffer.GetBits(3);
+	    picData->blkData.dct_dc_size_luminance = 0;
+	} else if (0 == ((bits >> 7) & 2)) {
+	    bits = _bitBuffer.GetBits(2);
+	    if (0 == bits & 1) {
+		picData->blkData.dct_dc_size_luminance = 1;
+	    } else {
+		picData->blkData.dct_dc_size_luminance = 2;
+	    }
+	} else if (5 == (bits >> 6)) {
+	    _bitBuffer.GetBits(3);
+	    picData->blkData.dct_dc_size_luminance = 3;
+	} else if (6 == (bits >> 6)) {
+	    _bitBuffer.GetBits(3);
+	    picData->blkData.dct_dc_size_luminance = 4;
+	} else if (0xE == (bits >> 5)) {
+	    _bitBuffer.GetBits(4);
+	    picData->blkData.dct_dc_size_luminance = 5;
+	} else if (0x1E == (bits >> 4)) {
+	    _bitBuffer.GetBits(5);
+	    picData->blkData.dct_dc_size_luminance = 6;
+	} else if (0x3E == (bits >> 3)) {
+	    _bitBuffer.GetBits(6);
+	    picData->blkData.dct_dc_size_luminance = 7;
+	} else if (0x7E == (bits >> 2)) {
+	    _bitBuffer.GetBits(7);
+	    picData->blkData.dct_dc_size_luminance = 8;
+	} else if (0xFE == (bits >> 1)) {
+	    _bitBuffer.GetBits(8);
+	    picData->blkData.dct_dc_size_luminance = 9;
+	} else if (0x1FE == (bits & 0x1FE)) {
+	    bits = _bitBuffer.GetBits(9);
+	    if (0 == bits & 1) {
+		picData->blkData.dct_dc_size_luminance = 10;
+	    } else {
+		picData->blkData.dct_dc_size_luminance = 11;
+	    }
+	} else {
+	    status = -1;
+	    break;
+	}
+    } while (0);
+
+    return status;
+}
+
+int32_t BlockParser::GetDctSizeChromiance(PictureData* picData)
+{
+    int32_t  status = 0;
+    uint32_t bits   = 0;
+    
+    do {
+	bits = _bitBuffer.PeekBits(10);
+	
+	if (0 == ((bits >> 8) & 2)) {
+	    bits = _bitBuffer.GetBits(2);
+	    if (0 == bits) {
+		picData->blkData.dct_dc_size_chrominance = 0;
+	    } else if (1 == bits) {
+		picData->blkData.dct_dc_size_chrominance = 1;
+	    } else {
+		status = -1;
+		break;
+	    }
+	} else if (2 == (bits >> 8)) {
+	    _bitBuffer.GetBits(2);
+	    picData->blkData.dct_dc_size_chrominance = 2;
+	} else if (6 == (bits >> 7)) {
+	    _bitBuffer.GetBits(3);
+	    picData->blkData.dct_dc_size_chrominance = 3;
+	} else if (0xE == (bits >> 6)) {
+	    _bitBuffer.GetBits(4);
+	    picData->blkData.dct_dc_size_chrominance = 4;
+	} else if (0x1E == (bits >> 5)) {
+	    _bitBuffer.GetBits(5);
+	    picData->blkData.dct_dc_size_chrominance = 5;
+	} else if (0x3E == (bits >> 4)) {
+	    _bitBuffer.GetBits(6);
+	    picData->blkData.dct_dc_size_chrominance = 6;
+	} else if (0x7E == (bits >> 3)) {
+	    _bitBuffer.GetBits(7);
+	    picData->blkData.dct_dc_size_chrominance = 7;
+	} else if (0xFE == (bits >> 2)) {
+	    _bitBuffer.GetBits(8);
+	    picData->blkData.dct_dc_size_chrominance = 8;
+	} else if (0x1FE == (bits >> 1)) {
+	    _bitBuffer.GetBits(9);
+	    picData->blkData.dct_dc_size_chrominance = 9;
+	} else if (0x3FE == (bits & 0x3FE)) {
+	    bits = _bitBuffer.GetBits(10);
+	    if (0 == (bits & 1)) {
+		picData->blkData.dct_dc_size_chrominance = 10;
+	    } else {
+		picData->blkData.dct_dc_size_chrominance = 11;
+	    }
+	} else {
+	    status = -1;
+	    break;
+	}
+    } while (0);
+
+    return status;
+}
+

@@ -14,6 +14,8 @@ public:
 
 private:
     int32_t GetPatternCode(PictureData* picData);
+    int32_t GetDctSizeLuminance(PictureData* picData);
+    int32_t GetDctSizeChromiance(PictureData* picData);
     
     BitBuffer&   _bitBuffer;
     StreamState& _streamState;

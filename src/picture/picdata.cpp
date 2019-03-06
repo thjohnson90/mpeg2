@@ -177,7 +177,11 @@ void MotionVecData::ResetData(void)
     }
 }
 
-BlockData::BlockData()
+BlockData::BlockData() :
+    dct_dc_size_luminance(0),
+    dct_dc_differential_lum(0),
+    dct_dc_size_chrominance(0),
+    dct_dc_differential_chrom(0)
 {
     ResetData();
 }
@@ -187,6 +191,11 @@ void BlockData::ResetData(void)
     for (int i = 0; i < 12; i++) {
 	pattern_code[i] = 0;
     }
+
+    dct_dc_size_luminance     = 0;
+    dct_dc_differential_lum   = 0;
+    dct_dc_size_chrominance   = 0;
+    dct_dc_differential_chrom = 0;
 }
 
 PictureDataMgr* PictureDataMgr::_PictureDataMgr = 0;

@@ -120,6 +120,11 @@ struct BlockData {
     void ResetData(void);
 
     uint32_t pattern_code[12];
+
+    uint32_t dct_dc_size_luminance     : 9;
+    uint32_t dct_dc_differential_lum   : 11;
+    uint32_t dct_dc_size_chrominance   : 10;
+    uint32_t dct_dc_differential_chrom : 11;
 };
 
 struct PictureData
