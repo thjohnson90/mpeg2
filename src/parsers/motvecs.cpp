@@ -194,112 +194,112 @@ int32_t MotionVecsParser::GetMotionCode(PictureData* picData, uint32_t r, uint32
 	    _bitBuffer.GetBits(1);
 	    picData->mvData.motion_code[r][s][t] = 0;
 	} else if (2 == ((mc >> 8) & 2)) {
-	    _bitBuffer.GetBits(3);
+	    mc = _bitBuffer.GetBits(3);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -1;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 1;
 	    }
 	} else if (2 == ((mc >> 7) & 2)) {
-	    _bitBuffer.GetBits(4);
+	    mc = _bitBuffer.GetBits(4);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -2;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 2;
 	    }
 	} else if (2 == ((mc >> 6) & 2)) {
-	    _bitBuffer.GetBits(5);
+	    mc = _bitBuffer.GetBits(5);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -3;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 3;
 	    }
 	} else if (6 == ((mc >> 4) & 6)) {
-	    _bitBuffer.GetBits(7);
+	    mc = _bitBuffer.GetBits(7);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -4;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 4;
 	    }
 	} else if (0xA == ((mc >> 3) & 0xA)) {
-	    _bitBuffer.GetBits(8);
+	    mc = _bitBuffer.GetBits(8);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -5;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 5;
 	    }
 	} else if (8 == ((mc >> 3) & 8)) {
-	    _bitBuffer.GetBits(8);
+	    mc = _bitBuffer.GetBits(8);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -6;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 6;
 	    }
 	} else if (6 == ((mc >> 3) & 6)) {
-	    _bitBuffer.GetBits(8);
+	    mc = _bitBuffer.GetBits(8);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -7;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 7;
 	    }
 	} else if (0x16 == ((mc >> 1) & 0x16)) {
-	    _bitBuffer.GetBits(10);
+	    mc = _bitBuffer.GetBits(10);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -8;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 8;
 	    }
 	} else if (0x14 == ((mc >> 1) & 0x14)) {
-	    _bitBuffer.GetBits(10);
+	    mc = _bitBuffer.GetBits(10);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -9;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 9;
 	    }
 	} else if (0x12 == ((mc >> 1) & 0x12)) {
-	    _bitBuffer.GetBits(10);
+	    mc = _bitBuffer.GetBits(10);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -10;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 10;
 	    }
 	} else if (0x22 == (mc & 0x22)) {
-	    _bitBuffer.GetBits(11);
+	    mc = _bitBuffer.GetBits(11);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -11;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 11;
 	    }
 	} else if (0x20 == (mc & 0x20)) {
-	    _bitBuffer.GetBits(11);
+	    mc = _bitBuffer.GetBits(11);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -12;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 12;
 	    }
 	} else if (0x1E == (mc & 0x1E)) {
-	    _bitBuffer.GetBits(11);
+	    mc = _bitBuffer.GetBits(11);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -13;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 13;
 	    }
 	} else if (0x1C == (mc & 0x1C)) {
-	    _bitBuffer.GetBits(11);
+	    mc = _bitBuffer.GetBits(11);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -14;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 14;
 	    }
 	} else if (0x1A == (mc & 0x1A)) {
-	    _bitBuffer.GetBits(11);
+	    mc = _bitBuffer.GetBits(11);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -15;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 15;
 	    }
 	} else if (0x18 == (mc & 0x18)) {
-	    _bitBuffer.GetBits(11);
+	    mc = _bitBuffer.GetBits(11);
 	    if (1 == mc & 1) {
 		picData->mvData.motion_code[r][s][t] = -16;
 	    } else {
@@ -325,7 +325,7 @@ int32_t MotionVecsParser::GetDmVector(PictureData* picData, uint32_t t)
 	    _bitBuffer.GetBits(1);
 	    picData->mvData.dmvector[t] = 0;
 	} else if (2 == (bits & 0x10)) {
-	    _bitBuffer.GetBits(2);
+	    bits = _bitBuffer.GetBits(2);
 	    if (1 == (bits & 1)) {
 		picData->mvData.dmvector[t] = -1;
 	    } else {
