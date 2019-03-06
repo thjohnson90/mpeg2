@@ -7,10 +7,15 @@ using namespace std;
 #include "bitbuf.h"
 #include "picdata.h"
 #include "motvecs.h"
+#include "block.h"
 #include "macroblk.h"
 
 MacroblkParser::MacroblkParser(BitBuffer& bb, StreamState& ss) :
-    _macroblkParser(nullptr), _bitBuffer(bb), _streamState(ss)
+    _macroblkParser(nullptr),
+    _motionvecsParser(nullptr),
+    _blockParser(nullptr),
+    _bitBuffer(bb),
+    _streamState(ss)
 {
 }
 
@@ -30,6 +35,11 @@ int32_t MacroblkParser::Initialize(void)
 		_motionvecsParser = GetMotionVecsParser();
 		if (nullptr != _motionvecsParser) {
 		    _motionvecsParser->Initialize();
+		}
+
+		_blockParser = GetBlockParser();
+		if (nullptr != _blockParser) {
+		    _blockParser->Initialize();
 		}
 	    } catch (std::bad_alloc) {
 		Destroy();
@@ -52,6 +62,12 @@ int32_t MacroblkParser::Destroy(void)
 	}
 	delete _motionvecsParser;
 	_motionvecsParser = nullptr;
+
+	if (nullptr != _blockParser) {
+	    _blockParser->Destroy();
+	}
+	delete _blockParser;
+	_blockParser = nullptr;
     } while (0);
     
     return status;
@@ -106,7 +122,7 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	}
 
 	if (1 == picData->macroblkData.macroblock_pattern) {
-//	    coded_block_pattern();
+	    _blockParser->CodedBlkPattern(picData);
 	}
 
 	// get the block count from the chroma format
@@ -130,7 +146,7 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	}
 
 	for (uint32_t i = 0; i < picData->macroblkData.block_count; i++) {
-//	    block(i);
+	    _blockParser->ParseBlock(picData, i);
 	}
 	
 	_bitBuffer.GetNextStartCode();
@@ -153,6 +169,14 @@ MotionVecsParser* MacroblkParser::GetMotionVecsParser(void)
         _motionvecsParser = new MotionVecsParser(_bitBuffer, _streamState);
     }
     return _motionvecsParser;
+}
+
+BlockParser* MacroblkParser::GetBlockParser(void)
+{
+    if (nullptr == _blockParser) {
+	_blockParser = new BlockParser(_bitBuffer, _streamState);
+    }
+    return _blockParser;
 }
 
 uint32_t MacroblkParser::GetMacroblkAddrInc(void)
@@ -904,4 +928,3 @@ int32_t MacroblkParser::MbModeBPic(PictureData* picData)
 
     return status;
 }
-

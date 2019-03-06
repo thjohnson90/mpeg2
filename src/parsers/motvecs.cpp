@@ -7,6 +7,7 @@ using namespace std;
 #include "bitbuf.h"
 #include "picdata.h"
 #include "motvecs.h"
+#include "block.h"
 #include "macroblk.h"
 
 MotionVecsParser::MotionVecsParser(BitBuffer& bb, StreamState& ss) :
@@ -21,44 +22,12 @@ MotionVecsParser::~MotionVecsParser()
 
 int32_t MotionVecsParser::Initialize(void)
 {
-    int32_t status = 0;
-
-#if 0
-    do {
-      // create parsers
-	if (nullptr == _motionvecsParser) {
-	    try {
-		_motionvecsParser = GetMotionVectorsParser();
-		if (nullptr != _motionvecsParser) {
-		    _motionvecsParser->Initalize();
-		}
-	    } catch (std::bad_alloc) {
-		Destroy();
-		status = -1;
-		break;
-	    }
-	}
-    } while (0);
-#endif
-    
-    return status;
+    return 0;
 }
 
 int32_t MotionVecsParser::Destroy(void)
 {
-    int32_t status = 0;
-
-#if 0
-    do {
-      if (nullptr != _motionvecsParser) {
-	    _motionvecsParser->Destroy();
-	}
-	delete _motionvecsParser;
-	_motionvecsParser = nullptr;
-    } while (0);
-#endif
-    
-    return status;
+    return 0;
 }
 
 int32_t MotionVecsParser::ParseMotionVecs(PictureData* picData, uint32_t s)

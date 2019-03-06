@@ -119,7 +119,10 @@ MacroblkData::MacroblkData() :
     motion_vector_count(0),
     mv_format(MVFMT_FRAME),
     dmv(0),
-    block_count(0)
+    block_count(0),
+    coded_block_pattern_420(0),
+    coded_block_pattern_1(0),
+    coded_block_pattern_2(0)
 {
     motion_vertical_field_select[0][0] = 0;
     motion_vertical_field_select[0][1] = 0;
@@ -151,6 +154,9 @@ void MacroblkData::ResetData(void)
     motion_vertical_field_select[0][1] = 0;
     motion_vertical_field_select[1][0] = 0;
     motion_vertical_field_select[1][1] = 0;
+    coded_block_pattern_420            = 0;
+    coded_block_pattern_1              = 0;
+    coded_block_pattern_2              = 0;
 }
 
 MotionVecData::MotionVecData()
@@ -168,6 +174,18 @@ void MotionVecData::ResetData(void)
 	    }
 	}
 	dmvector[i] = 0;
+    }
+}
+
+BlockData::BlockData()
+{
+    ResetData();
+}
+
+void BlockData::ResetData(void)
+{
+    for (int i = 0; i < 12; i++) {
+	pattern_code[i] = 0;
     }
 }
 

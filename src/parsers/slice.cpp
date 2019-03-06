@@ -7,6 +7,7 @@ using namespace std;
 #include "bitbuf.h"
 #include "picdata.h"
 #include "motvecs.h"
+#include "block.h"
 #include "macroblk.h"
 #include "slice.h"
 

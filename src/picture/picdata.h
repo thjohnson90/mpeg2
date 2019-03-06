@@ -59,7 +59,7 @@ struct PictureCodingExtension
 struct SliceData
 {
     SliceData();
-    void ResetData();
+    void ResetData(void);
     
     uint32_t slice_vertical_position_ext : 3;
     uint32_t priority_breakpoint         : 7;
@@ -73,7 +73,7 @@ struct SliceData
 struct MacroblkData
 {
     MacroblkData();
-    void ResetData();
+    void ResetData(void);
 
     enum {
 	MVFMT_FIELD = 0,
@@ -101,15 +101,25 @@ struct MacroblkData
     uint32_t block_count                       : 4;
 
     uint8_t motion_vertical_field_select[2][2];
+    uint32_t coded_block_pattern_420;
+    uint32_t coded_block_pattern_1;
+    uint32_t coded_block_pattern_2;
 };
 
 struct MotionVecData {
     MotionVecData();
-    void ResetData();
+    void ResetData(void);
 
     int32_t  motion_code[2][2][2];
     uint32_t motion_residual[2][2][2];
     int32_t  dmvector[2];
+};
+
+struct BlockData {
+    BlockData();
+    void ResetData(void);
+
+    uint32_t pattern_code[12];
 };
 
 struct PictureData
@@ -122,6 +132,7 @@ struct PictureData
     struct SliceData              sliceData;
     struct MacroblkData           macroblkData;
     struct MotionVecData          mvData;
+    struct BlockData              blkData;
 };
 
 class PictureDataMgr
