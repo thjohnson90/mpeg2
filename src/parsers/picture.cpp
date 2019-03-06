@@ -142,10 +142,10 @@ int32_t PictureParser::ParsePictCodingExt(void)
 	uint8_t sc = _bitBuffer.GetBits(4);
 	assert(PictureParser::PICT_CODING_EXT_ID == sc);
 	
-        picData->picCodingExt.f_code_forw_horz      = _bitBuffer.GetBits(4);
-        picData->picCodingExt.f_code_forw_vert      = _bitBuffer.GetBits(4);
-        picData->picCodingExt.f_code_back_horz      = _bitBuffer.GetBits(4);
-        picData->picCodingExt.f_code_back_vert      = _bitBuffer.GetBits(4);
+        picData->picCodingExt.f_code[0][0]          = _bitBuffer.GetBits(4);
+        picData->picCodingExt.f_code[0][1]          = _bitBuffer.GetBits(4);
+        picData->picCodingExt.f_code[1][0]          = _bitBuffer.GetBits(4);
+        picData->picCodingExt.f_code[1][1]          = _bitBuffer.GetBits(4);
         picData->picCodingExt.intra_dc_prec         = _bitBuffer.GetBits(2);
         picData->picCodingExt.picture_struct        = _bitBuffer.GetBits(2);
         picData->picCodingExt.top_field_first       = _bitBuffer.GetBits(1);

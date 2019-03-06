@@ -27,10 +27,6 @@ void PictureHeader::ResetData(void)
 }
 
 PictureCodingExtension::PictureCodingExtension() :
-    f_code_forw_horz(0),
-    f_code_forw_vert(0),
-    f_code_back_horz(0),
-    f_code_back_vert(0),
     intra_dc_prec(0),
     picture_struct(0),
     top_field_first(0),
@@ -49,14 +45,21 @@ PictureCodingExtension::PictureCodingExtension() :
     burst_amplitude(0),
     sub_carrier_phase(0)
 {
+    for (int i = 0; i < 2; i++) {
+	for (int j = 0; j < 2; j++) {
+	    f_code[i][j] = 0;
+	}
+    }
 }
 
 void PictureCodingExtension::ResetData(void)
 {
-    f_code_forw_horz     = 0;
-    f_code_forw_vert     = 0;
-    f_code_back_horz     = 0;
-    f_code_back_vert     = 0;
+    for (int i = 0; i < 2; i++) {
+	for (int j = 0; j < 2; j++) {
+	    f_code[i][j] = 0;
+	}
+    }
+
     intra_dc_prec        = 0;
     picture_struct       = 0;
     top_field_first      = 0;
@@ -152,13 +155,7 @@ void MacroblkData::ResetData(void)
 
 MotionVecData::MotionVecData()
 {
-    for (int i = 0; i < 2; i++) {
-	for (int j = 0; j < 2; j++) {
-	    for (int k = 0; k < 2; k++) {
-		motion_code[i][j][k] = 0;
-	    }
-	}
-    }
+    ResetData();
 }
 
 void MotionVecData::ResetData(void)
@@ -166,9 +163,11 @@ void MotionVecData::ResetData(void)
     for (int i = 0; i < 2; i++) {
 	for (int j = 0; j < 2; j++) {
 	    for (int k = 0; k < 2; k++) {
-		motion_code[i][j][k] = 0;
+		motion_code[i][j][k]     = 0;
+		motion_residual[i][j][k] = 0;
 	    }
 	}
+	dmvector[i] = 0;
     }
 }
 

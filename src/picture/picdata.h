@@ -35,10 +35,8 @@ struct PictureCodingExtension
 	PIC_STRUCT_FRAME     = 3
     };
 
-    uint32_t f_code_forw_horz     : 4;
-    uint32_t f_code_forw_vert     : 4;
-    uint32_t f_code_back_horz     : 4;
-    uint32_t f_code_back_vert     : 4;
+    uint32_t f_code[2][2];
+    
     uint32_t intra_dc_prec        : 2;
     uint32_t picture_struct       : 2;
     uint32_t top_field_first      : 1;
@@ -109,7 +107,9 @@ struct MotionVecData {
     MotionVecData();
     void ResetData();
 
-    int32_t motion_code[2][2][2];
+    int32_t  motion_code[2][2][2];
+    uint32_t motion_residual[2][2][2];
+    int32_t  dmvector[2];
 };
 
 struct PictureData

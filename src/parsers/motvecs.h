@@ -16,6 +16,7 @@ public:
 private:
     MotionVecsParser* GetMotionVecsParser(void);
     int32_t GetMotionCode(PictureData* picData, uint32_t r, uint32_t s, uint32_t t);
+    int32_t GetDmVector(PictureData* picData, uint32_t t);
 
     MotionVecsParser* _motionvecsParser;
     BitBuffer&        _bitBuffer;
