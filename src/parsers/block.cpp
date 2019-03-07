@@ -275,13 +275,31 @@ int32_t BlockParser::CodedBlkPattern(PictureData* picData)
 
 int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 {
-    int32_t status = 0;
-
+    int32_t  status = 0;
+    int32_t  cc     = 0;
+    uint32_t n      = 0;
+    
     do {
+	if (nullptr == picData || 11 < blkcnt) {
+	    status = -1;
+	    break;
+	}
+	
+	if (3 < blkcnt) {
+	    if (0 == (blkcnt & 1)) {
+		cc = 1;
+	    } else {
+		cc = 2;
+	    }
+	}
+
 	GetPatternCode(picData);
 
 	if (1 == picData->blkData.pattern_code[blkcnt]) {
 	    if (1 == picData->macroblkData.macroblock_intra) {
+		int32_t dct_diff   = 0;
+		int32_t half_range = 0;
+		
 		if (blkcnt < 4) {
 		    status = GetDctSizeLuminance(picData);
 		    if (-1 == status) {
@@ -290,6 +308,12 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		    if (0 != picData->blkData.dct_dc_size_luminance) {
 			picData->blkData.dct_dc_differential_lum =
 			    _bitBuffer.GetBits(picData->blkData.dct_dc_size_luminance);
+
+			dct_diff = GetDctDiff(picData,
+					      picData->blkData.dct_dc_size_luminance,
+					      static_cast<int32_t>(picData->blkData.dct_dc_differential_lum));
+		    } else {
+			dct_diff = 0;
 		    }
 		} else {
 		    status = GetDctSizeChromiance(picData);
@@ -299,12 +323,29 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		    if (0 != picData->blkData.dct_dc_size_chrominance) {
 			picData->blkData.dct_dc_differential_chrom =
 			    _bitBuffer.GetBits(picData->blkData.dct_dc_size_chrominance);
+
+			dct_diff = GetDctDiff(picData,
+					      picData->blkData.dct_dc_size_chrominance,
+					      static_cast<int32_t>(picData->blkData.dct_dc_differential_chrom));
+		    } else {
+			dct_diff = 0;
 		    }
 		}
-	    } else {
-		// First DCT coefficient
-	    }
 
+		picData->blkData.QFS[0]          = picData->blkData.dct_dc_pred[cc] + dct_diff;
+		picData->blkData.dct_dc_pred[cc] = picData->blkData.QFS[0];
+
+		n = 1;
+
+		int32_t max = (1 << (8 + picData->picCodingExt.intra_dc_prec)) - 1;
+		if (0 > picData->blkData.QFS[0] || max < picData->blkData.QFS[0]) {
+		    status = -1;
+		    break;
+		}
+	    } else {
+		status = ParseFirstDctCoeff(picData, n, blkcnt);
+	    }
+    
 	    //while (_bitBuffer.PeekBits() != EOB) {
 		// Subsequent DCT coefficients
 	    //}
@@ -474,5 +515,60 @@ int32_t BlockParser::GetDctSizeChromiance(PictureData* picData)
     } while (0);
 
     return status;
+}
+
+int32_t BlockParser::ParseFirstDctCoeff(PictureData* picData, uint32_t& n, uint32_t blkcnt)
+{
+    int32_t status = 0;
+    int32_t cc     = 0;
+    
+    do {
+	if (nullptr == picData || 11 < blkcnt) {
+	    status = -1;
+	    break;
+	}
+	
+	if (3 < blkcnt) {
+	    if (0 == (blkcnt & 1)) {
+		cc = 1;
+	    } else {
+		cc = 2;
+	    }
+	}
+
+	
+	if (1 == picData->macroblkData.macroblock_intra &&
+	    1 == picData->picCodingExt.intra_vlc_format) {
+	    // use B.15
+	} else {
+	    // use B.14
+	}
+	
+	
+
+    } while (0);
+
+    return status;
+}
+
+int32_t BlockParser::GetDctDiff(PictureData* picData, uint32_t dct_dc_size, int32_t dct_dc_differential)
+{
+    int32_t dct_diff = 0;
+
+    do {
+	if (nullptr == picData) {
+	    break;
+	}
+
+	int32_t half_range = 1 << (dct_dc_size - 1);
+
+	if (dct_dc_differential >= half_range) {
+	    dct_diff = dct_dc_differential;
+	} else {
+	    dct_diff = (dct_dc_differential + 1) - (2 * half_range);
+	}
+    } while (0);
+
+    return dct_diff;
 }
 

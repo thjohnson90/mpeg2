@@ -188,10 +188,21 @@ BlockData::BlockData() :
 
 void BlockData::ResetData(void)
 {
-    for (int i = 0; i < 12; i++) {
+    int32_t i = 0;
+    
+    for (i = 0; i < 12; i++) {
 	pattern_code[i] = 0;
     }
 
+    for (i = 0; i < 3; i++) {
+	dct_dc_pred[i] = 0;
+	coeff[i]       = 0;
+    }
+    
+    for (i = 0; i < 64; i++) {
+	QFS[i] = 0;
+    }
+    
     dct_dc_size_luminance     = 0;
     dct_dc_differential_lum   = 0;
     dct_dc_size_chrominance   = 0;
@@ -210,6 +221,31 @@ void PictureData::NullPictureData(void)
     picCodingExt.ResetData();
     sliceData.ResetData();
     macroblkData.ResetData();
+}
+
+void PictureData::ResetDctDcPred(void)
+{
+    int32_t i = 0;
+    int32_t r = 0;
+    
+    switch (picCodingExt.intra_dc_prec) {
+    case 0:
+	r = 128;
+	break;
+    case 1:
+	r = 256;
+	break;
+    case 2:
+	r = 512;
+	break;
+    case 3:
+	r = 1024;
+	break;
+    }
+
+    for (i = 0; i < 3; i++) {
+	blkData.dct_dc_pred[i] = r;
+    }
 }
 
 PictureDataMgr::PictureDataMgr(StreamState& ss) : _frontBuf(0), _backBuf(0), _strmState(ss)

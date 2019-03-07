@@ -102,6 +102,11 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	picData->macroblkData.macroblock_address_inc = GetMacroblkAddrInc();
 	status = GetMacroblkModes(picData);
 
+	if (1 != picData->macroblkData.macroblock_intra ||
+	    1 < picData->macroblkData.macroblock_address_inc) {
+	    	picData->ResetDctDcPred();
+	}
+
 	if (1 == picData->macroblkData.macroblock_quant) {
 	    picData->macroblkData.quantiser_scale_code = _bitBuffer.GetBits(5);
 	}

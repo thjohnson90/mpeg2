@@ -118,19 +118,25 @@ struct MotionVecData {
 struct BlockData {
     BlockData();
     void ResetData(void);
-
+    
     uint32_t pattern_code[12];
-
+    int32_t  dct_dc_pred[3];
+    int32_t  coeff[3];
+    
     uint32_t dct_dc_size_luminance     : 9;
-    uint32_t dct_dc_differential_lum   : 11;
     uint32_t dct_dc_size_chrominance   : 10;
-    uint32_t dct_dc_differential_chrom : 11;
+
+    int32_t dct_dc_differential_lum    : 11;
+    int32_t dct_dc_differential_chrom  : 11;
+
+    int32_t QFS[64];
 };
 
 struct PictureData
 {
     PictureData();
     void NullPictureData(void);
+    void ResetDctDcPred(void);
     
     struct PictureHeader          picHdr;
     struct PictureCodingExtension picCodingExt;

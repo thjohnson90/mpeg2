@@ -72,14 +72,15 @@ int32_t SliceParser::ParseSliceData(void)
             break;
         }
         
-	// do we really need another buffer - already got one when parsing the pic header
         picData = picDataMgr->GetCurrentBuffer();
         if (0 == picData) {
             status = -1;
             break;
         }
         
-        if (2800 < _streamState.seqHdr.vertical_sz) {
+	picData->ResetDctDcPred();
+
+	if (2800 < _streamState.seqHdr.vertical_sz) {
             picData->sliceData.slice_vertical_position_ext = _bitBuffer.GetBits(3);
         }
 
