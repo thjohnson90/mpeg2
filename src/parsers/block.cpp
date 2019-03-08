@@ -343,7 +343,11 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		    break;
 		}
 	    } else {
-		status = ParseFirstDctCoeff(picData, n, blkcnt);
+		status = ParseFirstDctCoeff(picData, blkcnt);
+		if (-1 == status) {
+		    break;
+		}
+		n++;
 	    }
     
 	    //while (_bitBuffer.PeekBits() != EOB) {
@@ -517,10 +521,15 @@ int32_t BlockParser::GetDctSizeChromiance(PictureData* picData)
     return status;
 }
 
-int32_t BlockParser::ParseFirstDctCoeff(PictureData* picData, uint32_t& n, uint32_t blkcnt)
+int32_t BlockParser::ParseFirstDctCoeff(PictureData* picData, uint32_t blkcnt)
 {
-    int32_t status = 0;
-    int32_t cc     = 0;
+    int32_t  status       = 0;
+    int32_t  cc           = 0;
+    uint32_t bits         = 0;
+    uint32_t run          = 0;
+    int32_t  signed_level = 0;
+    bool     eob          = false;
+    bool     esc          = false;
     
     do {
 	if (nullptr == picData || 11 < blkcnt) {
@@ -535,17 +544,315 @@ int32_t BlockParser::ParseFirstDctCoeff(PictureData* picData, uint32_t& n, uint3
 		cc = 2;
 	    }
 	}
-
 	
 	if (1 == picData->macroblkData.macroblock_intra &&
 	    1 == picData->picCodingExt.intra_vlc_format) {
 	    // use B.15
+	    status = GetB15Coeff(run, signed_level, eob, esc);
+	    if (-1 == status) {
+		break;
+	    }
 	} else {
 	    // use B.14
 	}
-	
-	
+    } while (0);
 
+    return status;
+}
+
+int32_t BlockParser::GetB14Coeff(uint32_t& run, int32_t& signed_level, bool& eob, bool& esc, bool first)
+{
+    int32_t  status = 0;
+    uint32_t bits   = 0;
+    uint32_t level  = 0;
+    uint32_t mask   = 0;
+
+    run   = 0;
+    level = 0;
+    eob   = false;
+    esc   = false;
+    
+    do {
+	bits = _bitBuffer.GetBits(17);
+
+	if (2 == (bits >> 15)) {
+	    _bitBuffer.GetBits(2);
+	    eob = true;
+	    break;
+	}
+
+	if (first) {
+	    GET_COEFF(2, 15, 17, 0, 1);
+	} else {
+	    GET_COEFF(6, 14, 17, 0, 1);
+	}
+	GET_COEFF(  6, 13, 17,  1,  1);
+	GET_COEFF(  8, 12, 17,  0,  2);
+	GET_COEFF(0xA, 12, 17,  2,  1);
+	GET_COEFF(0xA, 11, 17,  0,  3);
+	GET_COEFF(0xE, 11, 17,  3,  1);
+	GET_COEFF(0xC, 11, 17,  4,  1);
+	GET_COEFF(0xC, 10, 17,  1,  2);
+	GET_COEFF(0xE, 10, 17,  5,  1);
+	GET_COEFF(0xA, 10, 17,  6,  1);
+	GET_COEFF(  8, 10, 17,  7,  1);
+	GET_COEFF(0xC,  9, 17,  0,  4);
+	GET_COEFF(  8,  9, 17,  2,  2);
+	GET_COEFF(0xE,  9, 17,  8,  1);
+	GET_COEFF(0xA,  9, 17,  9,  1);
+
+	if (1 == (bits >> 11)) {
+	    _bitBuffer.GetBits(6);
+	    esc = true;
+	    break;
+	}
+
+	GET_COEFF(0x4C, 8, 17,  0,  5);
+	GET_COEFF(0x42, 8, 17,  0,  6);
+	GET_COEFF(0x4A, 8, 17,  1,  3);
+	GET_COEFF(0x48, 8, 17,  3,  2);
+	GET_COEFF(0x4E, 8, 17, 10,  1);
+	GET_COEFF(0x46, 8, 17, 11,  1);
+	GET_COEFF(0x44, 8, 17, 12,  1);
+	GET_COEFF(0x40, 8, 17, 13,  1);
+	GET_COEFF(0x14, 6, 17,  0,  7);
+	GET_COEFF(0x18, 6, 17,  1,  4);
+	GET_COEFF(0x16, 6, 17,  2,  3);
+	GET_COEFF(0x1E, 6, 17,  4,  2);
+	GET_COEFF(0x12, 6, 17,  5,  2);
+	GET_COEFF(0x1C, 6, 17, 14,  1);
+	GET_COEFF(0x1A, 6, 17, 15,  1);
+	GET_COEFF(0x10, 6, 17, 16,  1);
+	GET_COEFF(0x3A, 4, 17,  0,  8);
+	GET_COEFF(0x30, 4, 17,  0,  9);
+	GET_COEFF(0x26, 4, 17,  0, 10);
+	GET_COEFF(0x20, 4, 17,  0, 11);
+	GET_COEFF(0x36, 4, 17,  1,  5);
+	GET_COEFF(0x28, 4, 17,  2,  4);
+	GET_COEFF(0x38, 4, 17,  3,  3);
+	GET_COEFF(0x24, 4, 17,  4,  3);
+	GET_COEFF(0x3C, 4, 17,  6,  2);
+	GET_COEFF(0x2A, 4, 17,  7,  2);
+	GET_COEFF(0x22, 4, 17,  8,  2);
+	GET_COEFF(0x3E, 4, 17, 17,  1);
+	GET_COEFF(0x34, 4, 17, 18,  1);
+	GET_COEFF(0x32, 4, 17, 19,  1);
+	GET_COEFF(0x2E, 4, 17, 20,  1);
+	GET_COEFF(0x2C, 4, 17, 21,  1);
+	GET_COEFF(0x34, 3, 17,  0, 12);
+	GET_COEFF(0x32, 3, 17,  0, 13);
+	GET_COEFF(0x30, 3, 17,  0, 14);
+	GET_COEFF(0x2E, 3, 17,  0, 15);
+	GET_COEFF(0x2C, 3, 17,  1,  6);
+	GET_COEFF(0x2A, 3, 17,  1,  7);
+	GET_COEFF(0x28, 3, 17,  2,  5);
+	GET_COEFF(0x26, 3, 17,  3,  4);
+	GET_COEFF(0x24, 3, 17,  5,  3);
+	GET_COEFF(0x22, 3, 17,  9,  2);
+	GET_COEFF(0x20, 3, 17, 10,  2);
+	GET_COEFF(0x3E, 3, 17, 22,  1);
+	GET_COEFF(0x3C, 3, 17, 23,  1);
+	GET_COEFF(0x3A, 3, 17, 24,  1);
+	GET_COEFF(0x38, 3, 17, 25,  1);
+	GET_COEFF(0x36, 3, 17, 26,  1);
+	GET_COEFF(0x3E, 2, 17,  0, 16);
+	GET_COEFF(0x3C, 2, 17,  0, 17);
+	GET_COEFF(0x3A, 2, 17,  0, 18);
+	GET_COEFF(0x38, 2, 17,  0, 19);
+	GET_COEFF(0x36, 2, 17,  0, 20);
+	GET_COEFF(0x34, 2, 17,  0, 21);
+	GET_COEFF(0x32, 2, 17,  0, 22);
+	GET_COEFF(0x30, 2, 17,  0, 23);
+	GET_COEFF(0x2E, 2, 17,  0, 24);
+	GET_COEFF(0x2C, 2, 17,  0, 25);
+	GET_COEFF(0x2A, 2, 17,  0, 26);
+	GET_COEFF(0x28, 2, 17,  0, 27);
+	GET_COEFF(0x26, 2, 17,  0, 28);
+	GET_COEFF(0x24, 2, 17,  0, 29);
+	GET_COEFF(0x22, 2, 17,  0, 30);
+	GET_COEFF(0x20, 2, 17,  0, 31);
+	GET_COEFF(0x30, 1, 17,  0, 32);
+	GET_COEFF(0x2E, 1, 17,  0, 33);
+	GET_COEFF(0x2C, 1, 17,  0, 34);
+	GET_COEFF(0x2A, 1, 17,  0, 35);
+	GET_COEFF(0x28, 1, 17,  0, 36);
+	GET_COEFF(0x26, 1, 17,  0, 37);
+	GET_COEFF(0x24, 1, 17,  0, 38);
+	GET_COEFF(0x22, 1, 17,  0, 39);
+	GET_COEFF(0x20, 1, 17,  0, 40);
+	GET_COEFF(0x3E, 1, 17,  1,  8);
+	GET_COEFF(0x3C, 1, 17,  1,  9);
+	GET_COEFF(0x3A, 1, 17,  1, 10);
+	GET_COEFF(0x38, 1, 17,  1, 11);
+	GET_COEFF(0x36, 1, 17,  1, 12);
+	GET_COEFF(0x34, 1, 17,  1, 13);
+	GET_COEFF(0x32, 1, 17,  1, 14);
+	GET_COEFF(0x26, 0, 17,  1, 15);
+	GET_COEFF(0x24, 0, 17,  1, 16);
+	GET_COEFF(0x22, 0, 17,  1, 17);
+	GET_COEFF(0x20, 0, 17,  1, 18);
+	GET_COEFF(0x28, 0, 17,  6,  3);
+	GET_COEFF(0x34, 0, 17, 11,  2);
+	GET_COEFF(0x32, 0, 17, 12,  2);
+	GET_COEFF(0x30, 0, 17, 13,  2);
+	GET_COEFF(0x2E, 0, 17, 14,  2);
+	GET_COEFF(0x2C, 0, 17, 15,  2);
+	GET_COEFF(0x2A, 0, 17, 16,  2);
+	GET_COEFF(0x3E, 0, 17, 27,  1);
+	GET_COEFF(0x3C, 0, 17, 28,  1);
+	GET_COEFF(0x3A, 0, 17, 29,  1);
+	GET_COEFF(0x38, 0, 17, 30,  1);
+	GET_COEFF(0x36, 0, 17, 31,  1);
+
+	status = -1;
+	break;
+    } while (0);
+
+    return status;
+}
+
+int32_t BlockParser::GetB15Coeff(uint32_t& run, int32_t& signed_level, bool& eob, bool& esc)
+{
+    int32_t  status = 0;
+    uint32_t bits   = 0;
+    uint32_t level  = 0;
+    uint32_t mask   = 0;
+
+    run   = 0;
+    level = 0;
+    eob   = false;
+    esc   = false;
+    
+    do {
+	bits = _bitBuffer.GetBits(17);
+
+	if (6 == (bits >> 13)) {
+	    _bitBuffer.GetBits(4);
+	    eob = true;
+	    break;
+	}
+
+	GET_COEFF(    4, 14, 17,  0,  1);
+	GET_COEFF(    4, 13, 17,  1,  1);
+	GET_COEFF(  0xC, 13, 17,  0,  2);
+	GET_COEFF(  0xA, 11, 17,  2,  1);
+	GET_COEFF(  0xE, 12, 17,  0,  3);
+	GET_COEFF(  0xE, 11, 17,  3,  1);
+	GET_COEFF(  0xC, 10, 17,  4,  1);
+	GET_COEFF(  0xC, 11, 17,  1,  2);
+	GET_COEFF(  0xE, 10, 17,  5,  1);
+	GET_COEFF(  0xC,  9, 17,  6,  1);
+	GET_COEFF(    8,  9, 17,  7,  1);
+	GET_COEFF( 0x38, 11, 17,  0,  4);
+	GET_COEFF(  0xE,  9, 17,  2,  2);
+	GET_COEFF(  0xA,  9, 17,  8,  1);
+	GET_COEFF( 0xF0,  9, 17,  9,  1);
+
+	if (1 == (bits >> 11)) {
+	    _bitBuffer.GetBits(6);
+	    esc = true;
+	    break;
+	}
+
+	GET_COEFF( 0x3A, 11, 17,  0,  5);
+	GET_COEFF(  0xA, 10, 17,  0,  6);
+	GET_COEFF( 0xF2,  9, 17,  1,  3);
+	GET_COEFF( 0x4C,  8, 17,  3,  2);
+	GET_COEFF( 0xF4,  9, 17, 10,  1);
+	GET_COEFF( 0x42,  8, 17, 11,  1);
+	GET_COEFF( 0x4A,  8, 17, 12,  1);
+	GET_COEFF( 0x48,  8, 17, 13,  1);
+	GET_COEFF(    8, 10, 17,  0,  7);
+	GET_COEFF( 0x4E,  8, 17,  1,  4);
+	GET_COEFF(0x1F8,  8, 17,  2,  3);
+	GET_COEFF(0x1FA,  8, 17,  4,  2);
+	GET_COEFF(    8,  7, 17,  5,  2);
+	GET_COEFF(  0xA,  7, 17, 14,  1);
+	GET_COEFF(  0xE,  7, 17, 15,  1);
+	GET_COEFF( 0x1A,  6, 17, 16,  1);
+	GET_COEFF( 0xF6,  9, 17,  0,  8);
+	GET_COEFF( 0xF8,  9, 17,  0,  9);
+	GET_COEFF( 0x46,  8, 17,  0, 10);
+	GET_COEFF( 0x44,  8, 17,  0, 11);
+	GET_COEFF( 0x40,  8, 17,  1,  5);
+	GET_COEFF( 0x18,  6, 17,  2,  4);
+	GET_COEFF( 0x38,  4, 17,  3,  3);
+	GET_COEFF( 0x24,  4, 17,  4,  3);
+	GET_COEFF( 0x3C,  4, 17,  6,  2);
+	GET_COEFF( 0x2A,  4, 17,  7,  2);
+	GET_COEFF( 0x22,  4, 17,  8,  2);
+	GET_COEFF( 0x3E,  4, 17, 17,  1);
+	GET_COEFF( 0x64,  4, 17, 18,  1);
+	GET_COEFF( 0x32,  4, 17, 19,  1);
+	GET_COEFF( 0x2E,  4, 17, 20,  1);
+	GET_COEFF( 0x2C,  4, 17, 21,  1);
+	GET_COEFF(0x1F4,  8, 17,  0, 12);
+	GET_COEFF(0x1F6,  8, 17,  0, 13);
+	GET_COEFF(0x1FC,  8, 17,  0, 14);
+	GET_COEFF(0x1FE,  8, 17,  0, 15);
+	GET_COEFF( 0x2C,  3, 17,  1,  6);
+	GET_COEFF( 0x2A,  3, 17,  1,  7);
+	GET_COEFF( 0x28,  3, 17,  2,  5);
+	GET_COEFF( 0x26,  3, 17,  3,  4);
+	GET_COEFF( 0x24,  3, 17,  5,  3);
+	GET_COEFF( 0x22,  3, 17,  9,  2);
+	GET_COEFF( 0x20,  3, 17, 10,  2);
+	GET_COEFF( 0x3E,  3, 17, 22,  1);
+	GET_COEFF( 0x3C,  3, 17, 23,  1);
+	GET_COEFF( 0x3A,  3, 17, 24,  1);
+	GET_COEFF( 0x38,  3, 17, 25,  1);
+	GET_COEFF( 0x36,  3, 17, 26,  1);
+	GET_COEFF( 0x3E,  2, 17,  0, 16);
+	GET_COEFF( 0x3C,  2, 17,  0, 17);
+	GET_COEFF( 0x3A,  2, 17,  0, 18);
+	GET_COEFF( 0x38,  2, 17,  0, 19);
+	GET_COEFF( 0x36,  2, 17,  0, 20);
+	GET_COEFF( 0x34,  2, 17,  0, 21);
+	GET_COEFF( 0x32,  2, 17,  0, 22);
+	GET_COEFF( 0x30,  2, 17,  0, 23);
+	GET_COEFF( 0x2E,  2, 17,  0, 24);
+	GET_COEFF( 0x2C,  2, 17,  0, 25);
+	GET_COEFF( 0x2A,  2, 17,  0, 26);
+	GET_COEFF( 0x28,  2, 17,  0, 27);
+	GET_COEFF( 0x26,  2, 17,  0, 28);
+	GET_COEFF( 0x24,  2, 17,  0, 29);
+	GET_COEFF( 0x22,  2, 17,  0, 30);
+	GET_COEFF( 0x20,  2, 17,  0, 31);
+	GET_COEFF( 0x30,  1, 17,  0, 32);
+	GET_COEFF( 0x2E,  1, 17,  0, 33);
+	GET_COEFF( 0x2C,  1, 17,  0, 34);
+	GET_COEFF( 0x2A,  1, 17,  0, 35);
+	GET_COEFF( 0x28,  1, 17,  0, 36);
+	GET_COEFF( 0x26,  1, 17,  0, 37);
+	GET_COEFF( 0x24,  1, 17,  0, 38);
+	GET_COEFF( 0x22,  1, 17,  0, 39);
+	GET_COEFF( 0x20,  1, 17,  0, 40);
+	GET_COEFF( 0x3E,  1, 17,  1,  8);
+	GET_COEFF( 0x3C,  1, 17,  1,  9);
+	GET_COEFF( 0x3A,  1, 17,  1, 10);
+	GET_COEFF( 0x38,  1, 17,  1, 11);
+	GET_COEFF( 0x36,  1, 17,  1, 12);
+	GET_COEFF( 0x34,  1, 17,  1, 13);
+	GET_COEFF( 0x32,  1, 17,  1, 14);
+	GET_COEFF( 0x26,  0, 17,  1, 15);
+	GET_COEFF( 0x24,  0, 17,  1, 16);
+	GET_COEFF( 0x22,  0, 17,  1, 17);
+	GET_COEFF( 0x20,  0, 17,  1, 18);
+	GET_COEFF( 0x28,  0, 17,  6,  3);
+	GET_COEFF( 0x34,  0, 17, 11,  2);
+	GET_COEFF( 0x32,  0, 17, 12,  2);
+	GET_COEFF( 0x30,  0, 17, 13,  2);
+	GET_COEFF( 0x2E,  0, 17, 14,  2);
+	GET_COEFF( 0x2C,  0, 17, 15,  2);
+	GET_COEFF( 0x2A,  0, 17, 16,  2);
+	GET_COEFF( 0x3E,  0, 17, 27,  1);
+	GET_COEFF( 0x3C,  0, 17, 28,  1);
+	GET_COEFF( 0x3A,  0, 17, 29,  1);
+	GET_COEFF( 0x38,  0, 17, 30,  1);
+	GET_COEFF( 0x36,  0, 17, 31,  1);
+
+	status = -1;
+	break;
     } while (0);
 
     return status;
