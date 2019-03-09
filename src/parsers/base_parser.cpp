@@ -205,6 +205,7 @@ int32_t BaseParser::ParseMPEG2Stream(void)
     int32_t status = 0;
 
     do {
+	_bbitBuffer.GetNextStartCode();
 	CHECK_PARSE(_seqHdrParser->ParseSequenceHdr(), status);
 	if (StreamState::extension_start != _bbitBuffer.GetLastStartCode()) {
 	    // MPEG1 stream

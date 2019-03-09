@@ -17,8 +17,12 @@ SeqExtParser::SeqExtParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _st
 int32_t SeqExtParser::ParseSequenceExt(void)
 {
     int32_t status = 0;
+    int8_t  sc     = 0;
     
     do {
+	sc = _bitBuffer.GetBits(4);
+	assert(SeqExtParser::seq_ext == sc);
+	
         _streamState.extData.seqExt.profile_level    = _bitBuffer.GetBits(8);
         _streamState.extData.seqExt.progressive_seq  = _bitBuffer.GetBits(1);
         _streamState.extData.seqExt.chroma_format    = _bitBuffer.GetBits(2);

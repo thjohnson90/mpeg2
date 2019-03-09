@@ -273,6 +273,7 @@ int32_t BlockParser::CodedBlkPattern(PictureData* picData)
     return status;
 }
 
+#include <iostream>
 int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 {
     int32_t  status       = 0;
@@ -346,6 +347,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 
 		n = 1;
 	    } else {
+		// First DCT coefficient
 		status = ParseDctCoeff(picData, run, signed_level, eob, true);
 		if (-1 == status) {
 		    break;
@@ -378,6 +380,14 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	    }
 	}
     } while (0);
+
+    for (int i = 0; i < 64; i++) {
+	if (0 == i % 8) {
+	    cout << endl;
+	}
+	cout << "QFS[" << dec << i << "] =" << picData->blkData.QFS[i] << ", ";
+    }
+    cout << endl;
     
     return status;
 }
