@@ -16,10 +16,12 @@ private:
     int32_t GetPatternCode(PictureData* picData);
     int32_t GetDctSizeLuminance(PictureData* picData);
     int32_t GetDctSizeChromiance(PictureData* picData);
-    int32_t ParseFirstDctCoeff(PictureData* picData, uint32_t blkcnt);
+    int32_t ParseDctCoeff(PictureData* picData, uint32_t& run, int32_t& signed_level, bool& eob, bool first);
+    int32_t GetDctDiff(PictureData* picData, uint32_t dct_dc_size, int32_t dct_dc_differential);
     int32_t GetB14Coeff(uint32_t& run, int32_t& level, bool& eob, bool& esc, bool first = false);
     int32_t GetB15Coeff(uint32_t& run, int32_t& level, bool& eob, bool& esc);
-    int32_t GetDctDiff(PictureData* picData, uint32_t dct_dc_size, int32_t dct_dc_differential);
+    int32_t DecodeEscCoeff(uint32_t run, int32_t signed_level);
+    int32_t FillQfsArray(PictureData* picData, uint32_t run, int32_t signed_level, uint32_t& n);
     
     BitBuffer&   _bitBuffer;
     StreamState& _streamState;
