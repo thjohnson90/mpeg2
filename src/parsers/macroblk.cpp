@@ -77,6 +77,7 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 {
     int32_t      status  = 0;
     uint32_t     marker  = 0;
+    uint32_t     esccnt  = 0;
     PictureData* picData = 0;
     
     do {
@@ -97,9 +98,17 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 
 	while (8 == _bitBuffer.PeekBits(11)) {
 	    escape = _bitBuffer.GetBits(11);
+	    esccnt++;
 	}
 
 	picData->macroblkData.macroblock_address_inc = GetMacroblkAddrInc();
+	picData->macroblkData.macroblock_address =
+	    picData->macroblkData.previous_macroblock_address +
+	    picData->macroblkData.macroblock_address_inc +
+	    (33 * esccnt);
+	picData->macroblkData.mb_col =
+	    picData->macroblkData.macroblock_address % picData->macroblkData.mb_width;
+	
 	status = GetMacroblkModes(picData);
 
 	if (1 != picData->macroblkData.macroblock_intra ||
@@ -153,8 +162,6 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	for (uint32_t i = 0; i < picData->macroblkData.block_count; i++) {
 	    _blockParser->ParseBlock(picData, i);
 	}
-	
-	_bitBuffer.GetNextStartCode();
     } while (0);
     
     return status;

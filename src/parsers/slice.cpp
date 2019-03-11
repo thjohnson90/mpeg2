@@ -77,12 +77,20 @@ int32_t SliceParser::ParseSliceData(void)
             status = -1;
             break;
         }
-        
+
 	picData->ResetDctDcPred();
 
+	picData->macroblkData.slice_vertical_pos = static_cast<uint32_t>(_bitBuffer.GetLastStartCode());
 	if (2800 < _streamState.seqHdr.vertical_sz) {
             picData->sliceData.slice_vertical_position_ext = _bitBuffer.GetBits(3);
-        }
+	    picData->macroblkData.mb_row =
+		(picData->sliceData.slice_vertical_position_ext << 7) +
+		picData->macroblkData.slice_vertical_pos - 1;
+        } else {
+	    picData->macroblkData.mb_row = picData->macroblkData.slice_vertical_pos - 1;
+	}
+	picData->macroblkData.previous_macroblock_address =
+	    (picData->macroblkData.mb_row * picData->macroblkData.mb_width) - 1;
 
 	if (true == _streamState.extData.seqScalExt.present) {
 	    if (sequence_scalable_extension::data_partitioning ==
@@ -94,11 +102,10 @@ int32_t SliceParser::ParseSliceData(void)
 	picData->sliceData.quantizer_scale_code = _bitBuffer.GetBits(5);
 
 	if (1 == _bitBuffer.PeekBits(1)) {
-	    uint32_t reserved = 0;
-	    
-	    picData->sliceData.intra_slice_flag = _bitBuffer.GetBits(1);
-	    picData->sliceData.intra_slice      = _bitBuffer.GetBits(1);
-	    reserved                            = _bitBuffer.GetBits(7);
+	    picData->sliceData.intra_slice_flag        = _bitBuffer.GetBits(1);
+	    picData->sliceData.intra_slice             = _bitBuffer.GetBits(1);
+	    picData->sliceData.slice_picture_id_enable = _bitBuffer.GetBits(1);
+	    picData->sliceData.slice_picture_id        = _bitBuffer.GetBits(6);
 	    while (1 == _bitBuffer.PeekBits(1)) {
 		picData->sliceData.extra_bit_slice         = _bitBuffer.GetBits(1);
 		picData->sliceData.extra_information_slice = _bitBuffer.GetBits(8);
@@ -108,7 +115,7 @@ int32_t SliceParser::ParseSliceData(void)
 	picData->sliceData.extra_bit_slice = _bitBuffer.GetBits(1);
 	do {
 	    _macroblkParser->ParseMacroblkData();
-	} while (0 == _bitBuffer.PeekBits(23));
+	} while (0 != _bitBuffer.PeekBits(23));
 	
 	_bitBuffer.GetNextStartCode();
     } while (0);

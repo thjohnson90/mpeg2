@@ -85,6 +85,8 @@ SliceData::SliceData() :
     quantizer_scale_code(0),
     intra_slice_flag(0),
     intra_slice(0),
+    slice_picture_id_enable(0),
+    slice_picture_id(0),
     extra_bit_slice(0),
     extra_information_slice(0)
 {
@@ -97,6 +99,8 @@ void SliceData::ResetData(void)
     quantizer_scale_code        = 0;
     intra_slice_flag            = 0;
     intra_slice                 = 0;
+    slice_picture_id_enable     = 0;
+    slice_picture_id            = 0;
     extra_bit_slice             = 0;
     extra_information_slice     = 0;
 }
@@ -122,7 +126,13 @@ MacroblkData::MacroblkData() :
     block_count(0),
     coded_block_pattern_420(0),
     coded_block_pattern_1(0),
-    coded_block_pattern_2(0)
+    coded_block_pattern_2(0),
+    macroblock_address(0),
+    previous_macroblock_address(0),
+    slice_vertical_pos(0),
+    mb_row(0),
+    mb_col(0),
+    mb_width(0)
 {
     motion_vertical_field_select[0][0] = 0;
     motion_vertical_field_select[0][1] = 0;
@@ -157,6 +167,12 @@ void MacroblkData::ResetData(void)
     coded_block_pattern_420            = 0;
     coded_block_pattern_1              = 0;
     coded_block_pattern_2              = 0;
+    macroblock_address                 = 0;
+    previous_macroblock_address        = 0;
+    slice_vertical_pos                 = 0;
+    mb_row                             = 0;
+    mb_col                             = 0;
+    mb_width                           = 0;
 }
 
 MotionVecData::MotionVecData()

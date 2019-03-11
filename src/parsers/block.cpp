@@ -374,6 +374,10 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		}
 	    }
 
+	    if (-1 == status) {
+		break;
+	    }
+
 	    while (n < 64) {
 		picData->blkData.QFS[n] = 0;
 		n++;
@@ -381,6 +385,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	}
     } while (0);
 
+#ifdef DEBUG
     for (int i = 0; i < 64; i++) {
 	if (0 == i % 8) {
 	    cout << endl;
@@ -388,7 +393,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	cout << "QFS[" << dec << i << "] =" << picData->blkData.QFS[i] << ", ";
     }
     cout << endl;
-    
+#endif
     return status;
 }
 
@@ -573,14 +578,14 @@ int32_t BlockParser::ParseDctCoeff(PictureData* picData,
 	    1 == picData->picCodingExt.intra_vlc_format) {
 	    // use B.15
 	    status = GetB15Coeff(run, signed_level, eob, esc);
-	    if (-1 == status || eob) {
+	    if (-1 == status || (first && eob)) {
 		status = -1;
 		break;
 	    }
 	} else {
 	    // use B.14
 	    status = GetB14Coeff(run, signed_level, eob, esc, first);
-	    if (-1 == status || eob) {
+	    if (-1 == status || (first && eob)) {
 		status = -1;
 		break;
 	    }
@@ -624,7 +629,7 @@ int32_t BlockParser::GetB14Coeff(uint32_t& run, int32_t& signed_level, bool& eob
     esc   = false;
     
     do {
-	bits = _bitBuffer.GetBits(17);
+	bits = _bitBuffer.PeekBits(17);
 
 	if (2 == (bits >> 15)) {
 	    _bitBuffer.GetBits(2);
@@ -776,7 +781,7 @@ int32_t BlockParser::GetB15Coeff(uint32_t& run, int32_t& signed_level, bool& eob
     esc   = false;
     
     do {
-	bits = _bitBuffer.GetBits(17);
+	bits = _bitBuffer.PeekBits(17);
 
 	if (6 == (bits >> 13)) {
 	    _bitBuffer.GetBits(4);

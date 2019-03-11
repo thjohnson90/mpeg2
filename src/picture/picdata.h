@@ -66,6 +66,8 @@ struct SliceData
     uint32_t quantizer_scale_code        : 5;
     uint32_t intra_slice_flag            : 1;
     uint32_t intra_slice                 : 1;
+    uint32_t slice_picture_id_enable     : 1;
+    uint32_t slice_picture_id            : 6;
     uint32_t extra_bit_slice             : 1;
     uint32_t extra_information_slice     : 8;
 };
@@ -100,10 +102,16 @@ struct MacroblkData
     
     uint32_t block_count                       : 4;
 
-    uint8_t motion_vertical_field_select[2][2];
+    uint8_t  motion_vertical_field_select[2][2];
     uint32_t coded_block_pattern_420;
     uint32_t coded_block_pattern_1;
     uint32_t coded_block_pattern_2;
+    uint32_t macroblock_address;
+    uint32_t previous_macroblock_address;
+    uint32_t slice_vertical_pos;
+    uint32_t mb_row;
+    uint32_t mb_col;
+    uint32_t mb_width;
 };
 
 struct MotionVecData {

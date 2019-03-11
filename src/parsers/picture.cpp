@@ -78,6 +78,7 @@ int32_t PictureParser::Destroy(void)
 int32_t PictureParser::ParsePictureHdr(void)
 {
     int32_t  status  = 0;
+    uint32_t horz_sz = 0;
     
     do {
         PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(_streamState);
@@ -94,7 +95,18 @@ int32_t PictureParser::ParsePictureHdr(void)
         picData->picHdr.temporal_reference  = _bitBuffer.GetBits(10);
         picData->picHdr.picture_coding_type = _bitBuffer.GetBits(3);
         picData->picHdr.vbv_delay           = _bitBuffer.GetBits(16);
-        
+
+	picData->macroblkData.macroblock_address          = 0;
+	picData->macroblkData.previous_macroblock_address = 0;
+	picData->macroblkData.slice_vertical_pos          = 0;
+	picData->macroblkData.mb_row                      = 0;
+	picData->macroblkData.mb_col                      = 0;
+	picData->macroblkData.mb_width                    = 0;
+
+	horz_sz = static_cast<uint32_t>(12 << _streamState.extData.seqExt.horz_sz_ext) +
+	    static_cast<uint32_t>(_streamState.seqHdr.horizontal_sz);
+	picData->macroblkData.mb_width = (horz_sz + 15) / 16;
+	
         if (picData->picHdr.picture_coding_type == PictureHeader::PIC_CODING_TYPE_P ||
             picData->picHdr.picture_coding_type == PictureHeader::PIC_CODING_TYPE_B) {
             picData->picHdr.full_pel_forw_vector = _bitBuffer.GetBits(1);
