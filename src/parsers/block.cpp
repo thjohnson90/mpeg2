@@ -385,7 +385,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	}
     } while (0);
 
-#ifdef DEBUG
+#if 0
     for (int i = 0; i < 64; i++) {
 	if (0 == i % 8) {
 	    cout << endl;
@@ -631,11 +631,13 @@ int32_t BlockParser::GetB14Coeff(uint32_t& run, int32_t& signed_level, bool& eob
     do {
 	bits = _bitBuffer.PeekBits(17);
 
+#ifndef TEST
 	if (2 == (bits >> 15)) {
 	    _bitBuffer.GetBits(2);
 	    eob = true;
 	    break;
 	}
+#endif
 
 	if (first) {
 	    GET_COEFF(2, 15, 17, 0, 1);
@@ -840,7 +842,7 @@ int32_t BlockParser::GetB15Coeff(uint32_t& run, int32_t& signed_level, bool& eob
 	GET_COEFF( 0x2A,  4, 17,  7,  2);
 	GET_COEFF( 0x22,  4, 17,  8,  2);
 	GET_COEFF( 0x3E,  4, 17, 17,  1);
-	GET_COEFF( 0x64,  4, 17, 18,  1);
+	GET_COEFF( 0x34,  4, 17, 18,  1);
 	GET_COEFF( 0x32,  4, 17, 19,  1);
 	GET_COEFF( 0x2E,  4, 17, 20,  1);
 	GET_COEFF( 0x2C,  4, 17, 21,  1);
