@@ -349,6 +349,7 @@ int32_t MacroblkParser::GetMacroblkModes(PictureData* picData)
 	  break;
 	}
 
+#ifndef TEST
 	if ((1 == picData->macroblkData.spatial_temporal_weight_code_flag) &&
 	    (0 != _streamState.extData.pictSpatScalExt.spat_temp_wt_cd_tbl_idx)) {
 	    picData->macroblkData.spatial_temporal_weight_code = _bitBuffer.GetBits(2);
@@ -370,6 +371,7 @@ int32_t MacroblkParser::GetMacroblkModes(PictureData* picData)
 	    (1 == picData->macroblkData.macroblock_intra || 1 == picData->macroblkData.macroblock_pattern)) {
 	    picData->macroblkData.dct_type = _bitBuffer.GetBits(1);
 	}
+#endif
     } while (0);
 
     return status;

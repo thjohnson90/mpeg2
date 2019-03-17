@@ -11,6 +11,11 @@ public:
     int32_t Destroy(void);
     
     int32_t ParseMacroblkData(void);
+
+#ifdef TEST
+    uint32_t RunGetMacroblkAddrInc(void) {return GetMacroblkAddrInc();}
+    uint32_t RunGetMacroblkModes(PictureData* picData) {return GetMacroblkModes(picData);}
+#endif
     
 private:
     MacroblkParser*   GetMacroblkParser(void);

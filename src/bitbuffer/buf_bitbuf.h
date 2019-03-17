@@ -16,7 +16,7 @@ public:
     uint8_t* GetEmptyBuffer(uint32_t sz);
     int32_t  SetBaseParser(BaseParser* bp);
 #ifdef TEST
-    void     PokeBits(uint64_t bits, uint32_t len) {
+    void PokeBits(uint64_t bits, uint32_t len) {
 	_bitBuf = (bits << (MAX_BITS_IN_BUF - len));
 	_bitBufCnt = len;
     }
