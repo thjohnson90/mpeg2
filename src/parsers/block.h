@@ -16,12 +16,16 @@ public:
     {return GetB15Coeff(run, level, eob, esc);}
     int32_t RunGetB14Coeff(uint32_t& run, int32_t& level, bool& eob, bool& esc, bool first = false)
     {return GetB14Coeff(run, level, eob, esc, first);}
+    int32_t RunGetDctSizeLuminance(PictureData* picData)
+    {return GetDctSizeLuminance(picData);}
+    int32_t RunGetDctSizeChrominance(PictureData* picData)
+    {return GetDctSizeChrominance(picData);}
 #endif
 
 private:
     int32_t GetPatternCode(PictureData* picData);
     int32_t GetDctSizeLuminance(PictureData* picData);
-    int32_t GetDctSizeChromiance(PictureData* picData);
+    int32_t GetDctSizeChrominance(PictureData* picData);
     int32_t ParseDctCoeff(PictureData* picData, uint32_t& run, int32_t& signed_level, bool& eob, bool first);
     int32_t GetDctDiff(PictureData* picData, uint32_t dct_dc_size, int32_t dct_dc_differential);
     int32_t GetB14Coeff(uint32_t& run, int32_t& level, bool& eob, bool& esc, bool first = false);

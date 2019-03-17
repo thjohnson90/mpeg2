@@ -195,112 +195,112 @@ int32_t MotionVecsParser::GetMotionCode(PictureData* picData, uint32_t r, uint32
 	    picData->mvData.motion_code[r][s][t] = 0;
 	} else if (2 == ((mc >> 8) & 2)) {
 	    mc = _bitBuffer.GetBits(3);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -1;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 1;
 	    }
 	} else if (2 == ((mc >> 7) & 2)) {
 	    mc = _bitBuffer.GetBits(4);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -2;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 2;
 	    }
 	} else if (2 == ((mc >> 6) & 2)) {
 	    mc = _bitBuffer.GetBits(5);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -3;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 3;
 	    }
 	} else if (6 == ((mc >> 4) & 6)) {
 	    mc = _bitBuffer.GetBits(7);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -4;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 4;
 	    }
 	} else if (0xA == ((mc >> 3) & 0xA)) {
 	    mc = _bitBuffer.GetBits(8);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -5;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 5;
 	    }
 	} else if (8 == ((mc >> 3) & 8)) {
 	    mc = _bitBuffer.GetBits(8);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -6;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 6;
 	    }
 	} else if (6 == ((mc >> 3) & 6)) {
 	    mc = _bitBuffer.GetBits(8);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -7;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 7;
 	    }
 	} else if (0x16 == ((mc >> 1) & 0x16)) {
 	    mc = _bitBuffer.GetBits(10);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -8;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 8;
 	    }
 	} else if (0x14 == ((mc >> 1) & 0x14)) {
 	    mc = _bitBuffer.GetBits(10);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -9;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 9;
 	    }
 	} else if (0x12 == ((mc >> 1) & 0x12)) {
 	    mc = _bitBuffer.GetBits(10);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -10;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 10;
 	    }
 	} else if (0x22 == (mc & 0x22)) {
 	    mc = _bitBuffer.GetBits(11);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -11;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 11;
 	    }
 	} else if (0x20 == (mc & 0x20)) {
 	    mc = _bitBuffer.GetBits(11);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -12;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 12;
 	    }
 	} else if (0x1E == (mc & 0x1E)) {
 	    mc = _bitBuffer.GetBits(11);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -13;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 13;
 	    }
 	} else if (0x1C == (mc & 0x1C)) {
 	    mc = _bitBuffer.GetBits(11);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -14;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 14;
 	    }
 	} else if (0x1A == (mc & 0x1A)) {
 	    mc = _bitBuffer.GetBits(11);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -15;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 15;
 	    }
 	} else if (0x18 == (mc & 0x18)) {
 	    mc = _bitBuffer.GetBits(11);
-	    if (1 == mc & 1) {
+	    if (1 == (mc & 1)) {
 		picData->mvData.motion_code[r][s][t] = -16;
 	    } else {
 		picData->mvData.motion_code[r][s][t] = 16;
