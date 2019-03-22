@@ -620,7 +620,7 @@ int32_t BlockParser::GetB14Coeff(uint32_t& run, int32_t& signed_level, bool& eob
 	bits = _bitBuffer.PeekBits(17);
 
 #ifndef TEST
-	if (2 == (bits >> 15)) {
+	if ((!first) && (2 == (bits >> 15))) {
 	    _bitBuffer.GetBits(2);
 	    eob = true;
 	    break;

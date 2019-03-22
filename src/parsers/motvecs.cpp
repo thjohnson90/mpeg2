@@ -40,6 +40,10 @@ int32_t MotionVecsParser::ParseMotionVecs(PictureData* picData, uint32_t s)
 	uint32_t bitCnt = 0;
 	uint32_t mvcnt  = 0;
 
+	// main level, main profile - spatial_temporal_weight_class = 0
+	picData->macroblkData.spatial_temporal_weight_class = 0;
+	
+#if 0
 	if (0 == picData->macroblkData.spatial_temporal_weight_code) {
 	    picData->macroblkData.spatial_temporal_integer_weight = 1;
 	} else {
@@ -78,7 +82,9 @@ int32_t MotionVecsParser::ParseMotionVecs(PictureData* picData, uint32_t s)
 	    }		
 	    break;
 	}
+#endif
 
+	// see table 6-17
 	if (0 != picData->macroblkData.frame_motion_type) {
 	    picData->macroblkData.motion_vector_count = 1;
 	    picData->macroblkData.mv_format           = MacroblkData::MVFMT_FIELD;
@@ -100,7 +106,8 @@ int32_t MotionVecsParser::ParseMotionVecs(PictureData* picData, uint32_t s)
 		}
 	    }
 	}
-	
+
+	// see table 6-18
 	if (0 != picData->macroblkData.field_motion_type) {
 	    picData->macroblkData.motion_vector_count = 1;
 	    picData->macroblkData.mv_format           = MacroblkData::MVFMT_FIELD;
@@ -114,8 +121,8 @@ int32_t MotionVecsParser::ParseMotionVecs(PictureData* picData, uint32_t s)
 	}
 
 	if (1 == picData->macroblkData.motion_vector_count) {
-	    if (MacroblkData::MVFMT_FIELD == picData->macroblkData.mv_format &&
-		1 != picData->macroblkData.dmv) {
+	    if ((MacroblkData::MVFMT_FIELD == picData->macroblkData.mv_format) &&
+		(1 != picData->macroblkData.dmv)) {
 		picData->macroblkData.motion_vertical_field_select[0][s] = _bitBuffer.GetBits(1);
 	    }
 	    status = ParseMotionVec(picData, 0, s);

@@ -349,9 +349,21 @@ int32_t MacroblkParser::GetMacroblkModes(PictureData* picData)
 	}
 
 #ifndef TEST
-	if ((1 == picData->macroblkData.spatial_temporal_weight_code_flag) &&
-	    (0 != _streamState.extData.pictSpatScalExt.spat_temp_wt_cd_tbl_idx)) {
-	    picData->macroblkData.spatial_temporal_weight_code = _bitBuffer.GetBits(2);
+	// with no spatial scalability present, spatial_temporal_weight_class is zero
+	
+	// spatial_temporal_weight_code_table_index is part of picture_spatial_scalable_extension
+	// spatial_temporal_weight_code is either in the bitstream, derived from table 7-20, or
+	// derived from tables B.5 thru B.7
+	// See section 7.7.4
+	
+	if (1 == picData->macroblkData.spatial_temporal_weight_code_flag) {
+	    // spatial_temporal_weight_class derived from table 7-20
+	    if (0 != _streamState.extData.pictSpatScalExt.spat_temp_wt_cd_tbl_idx) {
+		picData->macroblkData.spatial_temporal_weight_code = _bitBuffer.GetBits(2);
+	    }
+	} else {
+	    // spatial_temporal_weight_code not present in bitstream
+	    // spatial_temporal_weight_class is derived from tables B.5 thru B.7
 	}
 
 	if (1 == picData->macroblkData.macroblock_motion_forw ||
@@ -375,7 +387,8 @@ int32_t MacroblkParser::GetMacroblkModes(PictureData* picData)
 	}
     
 	if ((1 == picData->macroblkData.macroblock_intra) &&
-	    (PictureCodingExtension::PIC_STRUCT_FIELD == picData->picCodingExt.picture_struct) &&
+	    ((PictureCodingExtension::PIC_STRUCT_TOP_FIELD == picData->picCodingExt.picture_struct) ||
+	     (PictureCodingExtension::PIC_STRUCT_TOP_FIELD == picData->picCodingExt.picture_struct)) &&
 	    (1 == picData->picCodingExt.concealment_mot_vecs)) {
 	    picData->macroblkData.field_motion_type = 1;
 	}
