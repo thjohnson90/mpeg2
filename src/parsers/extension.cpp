@@ -296,7 +296,7 @@ int32_t SeqExtParser::ParsePictSpatialScalExt(void)
 	_streamState.extData.pictSpatScalExt.spat_temp_wt_cd_tbl_idx = _bitBuffer.GetBits(2);
 	_streamState.extData.pictSpatScalExt.lwr_lyr_prog_frm        = _bitBuffer.GetBits(1);
 	_streamState.extData.pictSpatScalExt.lwr_lyr_deint_fld_sel   = _bitBuffer.GetBits(1);
-	
+
 	_bitBuffer.GetNextStartCode();
     } while (0);
 

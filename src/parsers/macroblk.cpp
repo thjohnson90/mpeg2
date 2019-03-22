@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdint.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -85,16 +86,10 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	uint32_t escape = 0;
 	
         PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(_streamState);
-        if (0 == picDataMgr) {
-            status = -1;
-            break;
-        }
-        
+	assert(nullptr != picDataMgr);
+
         picData = picDataMgr->GetCurrentBuffer();
-        if (0 == picData) {
-            status = -1;
-            break;
-        }
+	assert(nullptr != picData);
 
 	while (8 == _bitBuffer.PeekBits(11)) {
 	    escape = _bitBuffer.GetBits(11);
@@ -110,6 +105,7 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	    picData->macroblkData.macroblock_address % picData->macroblkData.mb_width;
 	
 	status = GetMacroblkModes(picData);
+	assert(-1 != status);
 
 	if (1 != picData->macroblkData.macroblock_intra ||
 	    1 < picData->macroblkData.macroblock_address_inc) {
@@ -122,21 +118,25 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 
 	if (1 == picData->macroblkData.macroblock_motion_forw ||
 	    (1 == picData->macroblkData.macroblock_intra &&
-	     picData->picCodingExt.concealment_mot_vecs)) {
-	    _motionvecsParser->ParseMotionVecs(picData, 0);
+	     1 == picData->picCodingExt.concealment_mot_vecs)) {
+	    status = _motionvecsParser->ParseMotionVecs(picData, 0);
+	    assert(-1 != status);
 	}
 
 	if (1 == picData->macroblkData.macroblock_motion_back) {
-	    _motionvecsParser->ParseMotionVecs(picData, 1);
+	    status = _motionvecsParser->ParseMotionVecs(picData, 1);
+	    assert(-1 != status);
 	}
 
 	if (1 == picData->macroblkData.macroblock_intra &&
-	    picData->picCodingExt.concealment_mot_vecs) {
+	    1 == picData->picCodingExt.concealment_mot_vecs) {
 	    marker = _bitBuffer.GetBits(1);
+	    assert(1 == marker);
 	}
 
 	if (1 == picData->macroblkData.macroblock_pattern) {
-	    _blockParser->CodedBlkPattern(picData);
+	    status = _blockParser->CodedBlkPattern(picData);
+	    assert(-1 != status);
 	}
 
 	// get the block count from the chroma format
@@ -159,8 +159,11 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	    break;
 	}
 
+	assert(-1 != status);
+
 	for (uint32_t i = 0; i < picData->macroblkData.block_count; i++) {
-	    _blockParser->ParseBlock(picData, i);
+	    status = _blockParser->ParseBlock(picData, i);
+	    assert(-1 != status);
 	}
     } while (0);
     
@@ -345,10 +348,6 @@ int32_t MacroblkParser::GetMacroblkModes(PictureData* picData)
 	    break;
 	}
 
-	if (-1 == status) {
-	  break;
-	}
-
 #ifndef TEST
 	if ((1 == picData->macroblkData.spatial_temporal_weight_code_flag) &&
 	    (0 != _streamState.extData.pictSpatScalExt.spat_temp_wt_cd_tbl_idx)) {
@@ -360,17 +359,39 @@ int32_t MacroblkParser::GetMacroblkModes(PictureData* picData)
 	    if (PictureCodingExtension::PIC_STRUCT_FRAME == picData->picCodingExt.picture_struct) {
 		if (0 == picData->picCodingExt.frame_pred_frame_dct) {
 		    picData->macroblkData.frame_motion_type = _bitBuffer.GetBits(2);
+		} else {
+		    picData->macroblkData.frame_motion_type = 2;
 		}
 	    } else {
 		picData->macroblkData.field_motion_type = _bitBuffer.GetBits(2);
 	    }
 	}
 
+	if ((1 == picData->macroblkData.macroblock_intra) &&
+	    (1 == picData->picCodingExt.concealment_mot_vecs)) {
+	    if (PictureCodingExtension::PIC_STRUCT_FRAME == picData->picCodingExt.picture_struct) {
+		picData->macroblkData.frame_motion_type = 2;
+	    }
+	}
+    
+	if ((1 == picData->macroblkData.macroblock_intra) &&
+	    (PictureCodingExtension::PIC_STRUCT_FIELD == picData->picCodingExt.picture_struct) &&
+	    (1 == picData->picCodingExt.concealment_mot_vecs)) {
+	    picData->macroblkData.field_motion_type = 1;
+	}
+	    
 	if (PictureCodingExtension::PIC_STRUCT_FRAME == picData->picCodingExt.picture_struct &&
 	    0 == picData->picCodingExt.frame_pred_frame_dct &&
-	    (1 == picData->macroblkData.macroblock_intra || 1 == picData->macroblkData.macroblock_pattern)) {
+	    ((1 == picData->macroblkData.macroblock_intra) ||
+	     (1 == picData->macroblkData.macroblock_pattern))) {
 	    picData->macroblkData.dct_type = _bitBuffer.GetBits(1);
+	} else {
+	    if (1 == picData->picCodingExt.frame_pred_frame_dct) {
+		picData->macroblkData.dct_type = 0;
+	    }
 	}
+
+	
 #endif
     } while (0);
 
@@ -394,7 +415,7 @@ int32_t MacroblkParser::MbModeIPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (1 == bits >> 2) {
 		_bitBuffer.GetBits(2);
 		picData->macroblkData.macroblock_quant                  = 1;
@@ -403,7 +424,7 @@ int32_t MacroblkParser::MbModeIPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (3 == bits) {
 		_bitBuffer.GetBits(4);
 		picData->macroblkData.macroblock_quant                  = 0;
@@ -428,7 +449,7 @@ int32_t MacroblkParser::MbModeIPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 0;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else {
 		status = -1;
 		break;
@@ -582,7 +603,7 @@ int32_t MacroblkParser::MbModePPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (2 == bits) {
 		_bitBuffer.GetBits(7);
 		picData->macroblkData.macroblock_quant                  = 1;
@@ -591,7 +612,7 @@ int32_t MacroblkParser::MbModePPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (3 == bits) {
 		_bitBuffer.GetBits(7);
 		picData->macroblkData.macroblock_quant                  = 0;
@@ -600,7 +621,7 @@ int32_t MacroblkParser::MbModePPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 0;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else {
 		status = -1;
 		break;
@@ -826,7 +847,7 @@ int32_t MacroblkParser::MbModeBPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 0;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (0xD == bits) {
 		_bitBuffer.GetBits(9);
 		picData->macroblkData.macroblock_quant                  = 1;
@@ -835,7 +856,7 @@ int32_t MacroblkParser::MbModeBPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else if (0xF == bits) {
 		_bitBuffer.GetBits(9);
 		picData->macroblkData.macroblock_quant                  = 0;
@@ -844,7 +865,7 @@ int32_t MacroblkParser::MbModeBPic(PictureData* picData)
 		picData->macroblkData.macroblock_pattern                = 1;
 		picData->macroblkData.macroblock_intra                  = 0;
 		picData->macroblkData.spatial_temporal_weight_code_flag = 0;
-		picData->macroblkData.spatial_temporal_weight_class     = 4;
+//		picData->macroblkData.spatial_temporal_weight_class     = 4;
 	    } else {
 		status = -1;
 		break;

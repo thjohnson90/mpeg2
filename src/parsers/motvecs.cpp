@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdint.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -117,12 +118,15 @@ int32_t MotionVecsParser::ParseMotionVecs(PictureData* picData, uint32_t s)
 		1 != picData->macroblkData.dmv) {
 		picData->macroblkData.motion_vertical_field_select[0][s] = _bitBuffer.GetBits(1);
 	    }
-	    ParseMotionVec(picData, 0, s);
+	    status = ParseMotionVec(picData, 0, s);
+	    assert(-1 != status);
 	} else {
 	    picData->macroblkData.motion_vertical_field_select[0][s] = _bitBuffer.GetBits(1);
-	    ParseMotionVec(picData, 0, s);
+	    status = ParseMotionVec(picData, 0, s);
+	    assert(-1 != status);
 	    picData->macroblkData.motion_vertical_field_select[1][s] = _bitBuffer.GetBits(1);
-	    ParseMotionVec(picData, 1, s);
+	    status = ParseMotionVec(picData, 1, s);
+	    assert(-1 != status);
 	}
     } while (0);
     

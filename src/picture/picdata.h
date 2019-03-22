@@ -64,7 +64,7 @@ struct SliceData
     uint32_t slice_vertical_position_ext : 3;
     uint32_t priority_breakpoint         : 7;
     uint32_t quantizer_scale_code        : 5;
-    uint32_t intra_slice_flag            : 1;
+    uint32_t slice_extension_flag        : 1;
     uint32_t intra_slice                 : 1;
     uint32_t slice_picture_id_enable     : 1;
     uint32_t slice_picture_id            : 6;

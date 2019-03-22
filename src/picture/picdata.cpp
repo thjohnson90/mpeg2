@@ -83,7 +83,7 @@ SliceData::SliceData() :
     slice_vertical_position_ext(0),
     priority_breakpoint(0),
     quantizer_scale_code(0),
-    intra_slice_flag(0),
+    slice_extension_flag(0),
     intra_slice(0),
     slice_picture_id_enable(0),
     slice_picture_id(0),
@@ -97,7 +97,7 @@ void SliceData::ResetData(void)
     slice_vertical_position_ext = 0;
     priority_breakpoint         = 0;
     quantizer_scale_code        = 0;
-    intra_slice_flag            = 0;
+    slice_extension_flag        = 0;
     intra_slice                 = 0;
     slice_picture_id_enable     = 0;
     slice_picture_id            = 0;
@@ -154,7 +154,7 @@ void MacroblkData::ResetData(void)
     frame_motion_type                  = 0;
     field_motion_type                  = 0;
     dct_type                           = 0;
-    spatial_temporal_weight_code       = 0;
+    spatial_temporal_weight_class      = 0;
     spatial_temporal_integer_weight    = 0;
     motion_vector_count                = 0;
     mv_format                          = MVFMT_FRAME;

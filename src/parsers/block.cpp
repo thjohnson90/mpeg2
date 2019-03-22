@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <iostream>
+#include <assert.h>
 
 using namespace std;
 
@@ -275,7 +277,6 @@ int32_t BlockParser::CodedBlkPattern(PictureData* picData)
     return status;
 }
 
-#include <iostream>
 int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 {
     int32_t  status       = 0;
@@ -299,7 +300,8 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	    }
 	}
 	
-	GetPatternCode(picData);
+	status = GetPatternCode(picData);
+	assert(-1 != status);
 	
 	if (1 == picData->blkData.pattern_code[blkcnt]) {
 	    if (1 == picData->macroblkData.macroblock_intra) {
@@ -308,9 +310,8 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		
 		if (blkcnt < 4) {
 		    status = GetDctSizeLuminance(picData);
-		    if (-1 == status) {
-			break;
-		    }
+		    assert(-1 != status);
+
 		    if (0 != picData->blkData.dct_dc_size_luminance) {
 			picData->blkData.dct_dc_differential_lum =
 			    _bitBuffer.GetBits(picData->blkData.dct_dc_size_luminance);
@@ -323,9 +324,8 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		    }
 		} else {
 		    status = GetDctSizeChrominance(picData);
-		    if (-1 == status) {
-			break;
-		    }
+		    assert(-1 != status);
+
 		    if (0 != picData->blkData.dct_dc_size_chrominance) {
 			picData->blkData.dct_dc_differential_chrom =
 			    _bitBuffer.GetBits(picData->blkData.dct_dc_size_chrominance);
@@ -342,42 +342,28 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		picData->blkData.dct_dc_pred[cc] = picData->blkData.QFS[0];
 		
 		int32_t max = (1 << (8 + picData->picCodingExt.intra_dc_prec)) - 1;
-		if (0 > picData->blkData.QFS[0] || max < picData->blkData.QFS[0]) {
-		    status = -1;
-		    break;
-		}
+		assert(0 <= picData->blkData.QFS[0]);
+		assert(max >= max < picData->blkData.QFS[0]);
 
 		n = 1;
 	    } else {
 		// First DCT coefficient
 		status = ParseDctCoeff(picData, run, signed_level, eob, true);
-		if (-1 == status) {
-		    break;
-		}
+		assert(-1 != status);
 
 		status = FillQfsArray(picData, run, signed_level, n);
-		if (-1 == status) {
-		    break;
-		}
+		assert(-1 != status);
 	    }
 
 	    while (!eob) {
 		// Subsequent DCT coefficients
 		status = ParseDctCoeff(picData, run, signed_level, eob, false);
-		if (-1 == status) {
-		    break;
-		}
+		assert(-1 != status);
 
 		if (!eob) {
 		    status = FillQfsArray(picData, run, signed_level, n);
-		    if (-1 == status) {
-			break;
-		    }
+		    assert(-1 != status);
 		}
-	    }
-
-	    if (-1 == status) {
-		break;
 	    }
 
 	    while (n < 64) {
@@ -663,7 +649,8 @@ int32_t BlockParser::GetB14Coeff(uint32_t& run, int32_t& signed_level, bool& eob
 
 	if (1 == (bits >> 11)) {
 	    _bitBuffer.GetBits(6);
-	    DecodeEscCoeff(run, signed_level);
+	    status = DecodeEscCoeff(run, signed_level);
+	    assert(-1 != status);
 	    esc = true;
 	    break;
 	}
@@ -811,7 +798,8 @@ int32_t BlockParser::GetB15Coeff(uint32_t& run, int32_t& signed_level, bool& eob
 
 	if (1 == (bits >> 11)) {
 	    _bitBuffer.GetBits(6);
-	    DecodeEscCoeff(run, signed_level);
+	    status = DecodeEscCoeff(run, signed_level);
+	    assert(-1 != status);
 	    esc = true;
 	    break;
 	}
