@@ -127,7 +127,7 @@ struct BlockData {
     BlockData();
     void ResetData(void);
     
-    uint32_t pattern_code[12];
+    bool     pattern_code[12];
     int32_t  dct_dc_pred[3];
     int32_t  coeff[3];
     

@@ -207,7 +207,7 @@ void BlockData::ResetData(void)
     int32_t i = 0;
     
     for (i = 0; i < 12; i++) {
-	pattern_code[i] = 0;
+	pattern_code[i] = false;
     }
 
     for (i = 0; i < 3; i++) {

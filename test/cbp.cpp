@@ -113,7 +113,7 @@ int main(void)
     memset(&ss, 0, sizeof(ss));
     memset(&pd, 0, sizeof(pd));
     
-    BlockParser bp(bbf, ss);
+    MacroblkParser mbp(bbf, ss);
     struct test_case* tc = nullptr;
 
     cout << "Coded Block Pattern Tests" << endl;
@@ -122,7 +122,7 @@ int main(void)
 	tc = &cbp_test_cases[i];
 	
 	bbf.PokeBits(tc->bits, tc->peek);
-	status = bp.CodedBlkPattern(&pd);
+	status = mbp.CodedBlkPattern(&pd);
 	if (-1 == status) {
 	    cout << "Function Error Detected" << endl;
 	    continue;

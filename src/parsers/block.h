@@ -9,8 +9,8 @@ public:
     int32_t Initialize(void);
     int32_t Destroy(void);
 
-    int32_t CodedBlkPattern(PictureData* picData);
     int32_t ParseBlock(PictureData* picData, uint32_t blkcnt);
+
 #ifdef TEST
     int32_t RunGetB15Coeff(uint32_t& run, int32_t& level, bool& eob, bool& esc)
     {return GetB15Coeff(run, level, eob, esc);}
@@ -23,7 +23,6 @@ public:
 #endif
 
 private:
-    int32_t GetPatternCode(PictureData* picData);
     int32_t GetDctSizeLuminance(PictureData* picData);
     int32_t GetDctSizeChrominance(PictureData* picData);
     int32_t ParseDctCoeff(PictureData* picData, uint32_t& run, int32_t& signed_level, bool& eob, bool first);
