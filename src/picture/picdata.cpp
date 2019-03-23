@@ -205,6 +205,7 @@ BlockData::BlockData() :
 void BlockData::ResetData(void)
 {
     int32_t i = 0;
+    int32_t j = 0;
     
     for (i = 0; i < 12; i++) {
 	pattern_code[i] = false;
@@ -217,6 +218,12 @@ void BlockData::ResetData(void)
     
     for (i = 0; i < 64; i++) {
 	QFS[i] = 0;
+    }
+
+    for (i = 0; i < 7; i++) {
+	for (j = 0; j < 7; j++) {
+	    QF[i][j] = 0;
+	}
     }
     
     dct_dc_size_luminance     = 0;

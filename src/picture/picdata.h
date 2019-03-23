@@ -138,6 +138,7 @@ struct BlockData {
     int32_t dct_dc_differential_chrom  : 11;
 
     int32_t QFS[64];
+    int32_t QF[8][8];
 };
 
 struct PictureData

@@ -124,6 +124,8 @@ int32_t SliceParser::ParseSliceData(void)
 	    if (-1 == status) {
 		break;
 	    }
+	    picData->macroblkData.previous_macroblock_address +=
+	      picData->macroblkData.macroblock_address_inc;
 	} while (0 != _bitBuffer.PeekBits(23));
 
 	if (-1 == status) {

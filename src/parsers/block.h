@@ -31,6 +31,7 @@ private:
     int32_t GetB15Coeff(uint32_t& run, int32_t& level, bool& eob, bool& esc);
     int32_t DecodeEscCoeff(uint32_t run, int32_t signed_level);
     int32_t FillQfsArray(PictureData* picData, uint32_t run, int32_t signed_level, uint32_t& n);
+    int32_t GetAlternateScan(PictureData* picData);
     
     BitBuffer&   _bitBuffer;
     StreamState& _streamState;

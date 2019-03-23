@@ -104,21 +104,6 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	picData->macroblkData.mb_col =
 	    picData->macroblkData.macroblock_address % picData->macroblkData.mb_width;
 
-	{
-	    cout << "macroblock_address_increment: " << dec
-		 << picData->macroblkData.macroblock_address_inc << endl;
-	    cout << "macroblock_address          : " << dec
-		 << picData->macroblkData.macroblock_address << endl;
-	    cout << "previous_macroblock_address : " << dec
-		 << picData->macroblkData.previous_macroblock_address << endl;
-	    cout << "mb_row                       : " << dec
-		 << picData->macroblkData.mb_row << endl;
-	    cout << "mb_col                       : " << dec
-		 << picData->macroblkData.mb_col << endl;
-	    cout << "mb_width                     : " << dec
-		 << picData->macroblkData.mb_width << endl;
-	}
-	
 	status = GetMacroblkModes(picData);
 	assert(-1 != status);
 
