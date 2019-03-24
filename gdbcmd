@@ -1,4 +1,4 @@
-tty /dev/pts/3
+tty /dev/pts/2
 set args ../sn1987a_2.mpeg
 break main
 #break base_parser.cpp:109

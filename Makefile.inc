@@ -5,7 +5,7 @@ MAKE = make
 ROOT = /home/tmjohns1/projects/mpeg2/src
 TARGET = mpeg2
 
-INCDIRS = stream bitbuffer parsers picture thread
+INCDIRS = stream bitbuffer parsers picture thread video
 INCLUDES = $(foreach dir, $(INCDIRS), -I$(ROOT)/$(dir))
 
 SRCEXT = cpp

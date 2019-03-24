@@ -139,6 +139,9 @@ struct BlockData {
 
     int32_t QFS[64];
     int32_t QF[8][8];
+    int32_t Fpp[8][8];
+    int32_t Fp[8][8];
+    int32_t F[8][8];
 };
 
 struct PictureData
@@ -178,6 +181,18 @@ private:
     PictureData*           _backBuf;
     StreamState&           _strmState;
 };
+
+static inline int32_t GetCC(uint32_t blkcnt) {
+    int32_t cc = 0;
+    if (3 < blkcnt) {
+	if (0 == (blkcnt & 1)) {
+	    cc = 1;
+	} else {
+	    cc = 2;
+	}
+    }
+    return cc;
+}
 
 #endif
 

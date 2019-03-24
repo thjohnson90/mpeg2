@@ -7,48 +7,34 @@ using namespace std;
 #include "stream.h"
 #include "bitbuf.h"
 #include "picdata.h"
+#include "videoproc.h"
 #include "block.h"
-
-#ifdef TEST
-uint32_t inv_scan[2][8][8] {
-#else
-static uint32_t inv_scan[2][8][8] {
-#endif
-    {
-	{ 0,  1,  5,  6, 14, 15, 27, 28},
-	{ 2,  4,  7, 13, 16, 26, 29, 42},
-	{ 3,  8, 12, 17, 25, 30, 41, 43},
-	{ 9, 11, 18, 24, 31, 40, 44, 53},
-	{10, 19, 23, 32, 39, 45, 52, 54},
-	{20, 22, 33, 38, 46, 51, 55, 60},
-	{21, 34, 37, 47, 50, 56, 59, 61},
-	{35, 36, 48, 49, 57, 58, 62, 63}
-    },
-    {
-	{ 0,  4,  6, 20, 22, 36, 38, 52},
-	{ 1,  5,  7, 21, 23, 37, 39, 53},
-	{ 2,  8, 19, 24, 34, 40, 50, 54},
-	{ 3,  9, 18, 25, 35, 41, 51, 55},
-	{10, 17, 26, 30, 42, 46, 56, 60},
-	{11, 16, 27, 31, 43, 47, 57, 61},
-	{12, 15, 28, 32, 44, 48, 58, 62},
-	{13, 14, 29, 33, 45, 49, 59, 63}
-    }
-};
 
 BlockParser::BlockParser(BitBuffer& bb, StreamState& ss) :
     _bitBuffer(bb),
-    _streamState(ss)
+    _streamState(ss),
+    _videoProc(nullptr)
 {
 }
 
 int32_t BlockParser::Initialize(void)
 {
-    return 0;
+    int32_t status = 0;
+
+    if (nullptr == _videoProc) {
+	_videoProc = new VideoProcessor(_streamState);
+	if (nullptr == _videoProc) {
+	    status = -1;
+	}
+    }
+    
+    return status;
 }
 
 int32_t BlockParser::Destroy(void)
 {
+    delete _videoProc;
+    
     return 0;
 }
 
@@ -67,13 +53,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	    break;
 	}
 	
-	if (3 < blkcnt) {
-	    if (0 == (blkcnt & 1)) {
-		cc = 1;
-	    } else {
-		cc = 2;
-	    }
-	}
+	cc = GetCC(blkcnt);
 	
 	if (picData->blkData.pattern_code[blkcnt]) {
 	    if (1 == picData->macroblkData.macroblock_intra) {
@@ -144,7 +124,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	    }
 	}
 
-	GetAlternateScan(picData);
+	status = _videoProc->ProcessVideoBlock(picData, blkcnt);
     } while (0);
 
     return status;
@@ -665,25 +645,3 @@ int32_t BlockParser::FillQfsArray(PictureData* picData, uint32_t run, int32_t si
 
     return status;
 }
-
-int32_t BlockParser::GetAlternateScan(PictureData* picData)
-{
-    int32_t status = 0;
-
-    do {
-	int32_t v   = 0;
-	int32_t u   = 0;
-	int32_t alt = 0;
-
-	alt = picData->picCodingExt.alternate_scan;
-	
-	for (v = 0; v < 8; v++) {
-	    for (u = 0; u < 8; u++) {
-		picData->blkData.QF[v][u] = picData->blkData.QFS[inv_scan[alt][v][u]];
-	    }
-	}
-    } while (0);
-
-    return status;
-}
-
