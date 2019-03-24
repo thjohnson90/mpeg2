@@ -35,6 +35,21 @@ const static uint32_t inv_scan[2][8][8] {
     }
 };
 
+#ifdef TEST
+int32_t quan_scale[2][32] {
+#else
+const static int32_t quan_scale[2][32] {
+#endif
+    {0, 2, 4, 6, 8, 10, 12, 14,
+	    16, 18, 20, 22, 24, 26, 28, 30,
+	    32, 34, 36, 38, 40, 42, 44, 46,
+	    48, 50, 52, 54, 56, 58, 60, 62},
+    {0, 1, 2, 3, 4, 5, 6, 7,
+	    8,  10, 12, 14, 16, 18, 20, 22,
+	    24, 28, 32, 36, 40, 44, 48, 52,
+	    56, 64, 72, 80, 88, 96, 104, 112}
+};
+
 VideoProcessor::VideoProcessor(StreamState& ss) :
     _streamState(ss)
 {
@@ -46,14 +61,10 @@ int32_t VideoProcessor::ProcessVideoBlock(PictureData* picData, uint32_t blkcnt)
 
     do {
 	status = GetAlternateScan(picData);
-	if (-1 == status) {
-	    break;
-	}
+	assert(-1 != status);
 
 	status = DoInverseQuantization(picData, blkcnt);
-	if (-1 == status) {
-	    break;
-	}
+	assert(-1 != status);
     } while (0);
 
     return status;
@@ -83,12 +94,14 @@ int32_t VideoProcessor::GetAlternateScan(PictureData* picData)
 
 int32_t VideoProcessor::DoInverseQuantization(PictureData* picData, uint32_t blkcnt)
 {
-    int32_t status        = 0;
-    int32_t v             = 0;
-    int32_t u             = 0;
-    int32_t w             = 0;
-    int32_t cc            = 0;
-    int32_t intra_dc_mult = 0;
+    int32_t status          = 0;
+    int32_t v               = 0;
+    int32_t u               = 0;
+    int32_t w               = 0;
+    int32_t k               = 0;
+    int32_t cc              = 0;
+    int32_t intra_dc_mult   = 0;
+    int32_t quantiser_scale = 0;
 
     switch (picData->picCodingExt.intra_dc_prec) {
     case 0:
@@ -110,6 +123,10 @@ int32_t VideoProcessor::DoInverseQuantization(PictureData* picData, uint32_t blk
     }
     
     cc = GetCC(blkcnt);
+    assert(0 != picData->sliceData.quantiser_scale_code);
+    quantiser_scale =
+	quan_scale[picData->picCodingExt.q_scale_type][picData->sliceData.quantiser_scale_code];
+    
     if (1 == picData->macroblkData.macroblock_intra) {
 	if ((sequence_extension::CHROMA_FMT_420 != _streamState.extData.seqExt.chroma_format) &&
 	    (0 != cc)) {
@@ -117,6 +134,7 @@ int32_t VideoProcessor::DoInverseQuantization(PictureData* picData, uint32_t blk
 	}
     } else {
 	w = 1;
+	k = 0 > picData->blkData.QF[v][u] ? -1 : 0 == picData->blkData.QF[v][u] ? 0 : 1;
 	if ((sequence_extension::CHROMA_FMT_420 != _streamState.extData.seqExt.chroma_format) &&
 	    (0 != cc)) {
 	    w = 3;
@@ -130,6 +148,8 @@ int32_t VideoProcessor::DoInverseQuantization(PictureData* picData, uint32_t blk
 		    // dc coefficient of intra macroblock
 		    picData->blkData.Fpp[v][u] = intra_dc_mult * picData->blkData.QF[v][u];
 		} else {
+//		    picData->blkData.Fpp[v][u] =
+//			((2 * picData->blkData.QF[v][u] + k) * W[w][v][u] * quantiser_scale) / 32;
 		}
 	    }
 	}

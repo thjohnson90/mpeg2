@@ -9,8 +9,8 @@ public:
 
 private:
     int32_t GetAlternateScan(PictureData* picData);
-    int32_t DoInverseQuantization(PictureData*picData, uint32_t blkcnt);
-    
+    int32_t DoInverseQuantization(PictureData* picData, uint32_t blkcnt);
+
     StreamState& _streamState;
 };
 

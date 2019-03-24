@@ -104,7 +104,7 @@ int32_t SliceParser::ParseSliceData(void)
 	    }
 	}
 
-	picData->sliceData.quantizer_scale_code = _bitBuffer.GetBits(5);
+	picData->sliceData.quantiser_scale_code = _bitBuffer.GetBits(5);
 
 	if (1 == _bitBuffer.PeekBits(1)) {
 	    picData->sliceData.slice_extension_flag    = _bitBuffer.GetBits(1);

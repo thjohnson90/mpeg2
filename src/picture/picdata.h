@@ -63,7 +63,7 @@ struct SliceData
     
     uint32_t slice_vertical_position_ext : 3;
     uint32_t priority_breakpoint         : 7;
-    uint32_t quantizer_scale_code        : 5;
+    uint32_t quantiser_scale_code        : 5;
     uint32_t slice_extension_flag        : 1;
     uint32_t intra_slice                 : 1;
     uint32_t slice_picture_id_enable     : 1;
@@ -83,7 +83,6 @@ struct MacroblkData
     };
 
     uint32_t macroblock_address_inc            : 6;
-    uint32_t quantiser_scale_code              : 5;
     uint32_t macroblock_quant                  : 1;
     uint32_t macroblock_motion_forw            : 1;
     uint32_t macroblock_motion_back            : 1;

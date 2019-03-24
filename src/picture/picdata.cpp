@@ -82,7 +82,7 @@ void PictureCodingExtension::ResetData(void)
 SliceData::SliceData() :
     slice_vertical_position_ext(0),
     priority_breakpoint(0),
-    quantizer_scale_code(0),
+    quantiser_scale_code(0),
     slice_extension_flag(0),
     intra_slice(0),
     slice_picture_id_enable(0),
@@ -96,7 +96,7 @@ void SliceData::ResetData(void)
 {
     slice_vertical_position_ext = 0;
     priority_breakpoint         = 0;
-    quantizer_scale_code        = 0;
+    quantiser_scale_code        = 0;
     slice_extension_flag        = 0;
     intra_slice                 = 0;
     slice_picture_id_enable     = 0;
@@ -107,7 +107,6 @@ void SliceData::ResetData(void)
 
 MacroblkData::MacroblkData() :
     macroblock_address_inc(0),
-    quantiser_scale_code(0),
     macroblock_quant(0),
     macroblock_motion_forw(0),
     macroblock_motion_back(0),
@@ -143,7 +142,6 @@ MacroblkData::MacroblkData() :
 void MacroblkData::ResetData(void)
 {
     macroblock_address_inc             = 0;
-    quantiser_scale_code               = 0;
     macroblock_quant                   = 0;
     macroblock_motion_forw             = 0;
     macroblock_motion_back             = 0;

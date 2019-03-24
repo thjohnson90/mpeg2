@@ -114,7 +114,7 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	}
 
 	if (1 == picData->macroblkData.macroblock_quant) {
-	    picData->macroblkData.quantiser_scale_code = _bitBuffer.GetBits(5);
+	    picData->sliceData.quantiser_scale_code = _bitBuffer.GetBits(5);
 	}
 
 	if (1 == picData->macroblkData.macroblock_motion_forw ||
