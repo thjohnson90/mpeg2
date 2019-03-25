@@ -6,6 +6,9 @@ using namespace std;
 #include "bitbuf.h"
 #include "sequence.h"
 
+extern int32_t dflt_intra_quant_matrix[8][8];
+extern int32_t dflt_nonintra_quant_matrix[8][8];
+
 SeqHdrParser::SeqHdrParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _streamState(ss)
 {
 }
@@ -32,6 +35,8 @@ int32_t SeqHdrParser::ParseSequenceHdr(void)
 	    if (0 > status) {
 		break;
 	    }
+//	    _streamState.seqHdr.intra_lum_qmtx = _streamState.seqHdr.intra_quant_matrix;
+//	    _streamState.seqHdr.intra_chr_qmtx = _streamState.seqHdr.intra_quant_matrix;
         }
         _streamState.seqHdr.load_non_intra_quant_matrix = _bitBuffer.GetBits(1);
         if (1 == _streamState.seqHdr.load_non_intra_quant_matrix) {
@@ -40,7 +45,13 @@ int32_t SeqHdrParser::ParseSequenceHdr(void)
 	    if (0 > status) {
 		break;
 	    }
+//	    _streamState.seqHdr.nonintra_lum_qmtx = _streamState.seqHdr.non_intra_quant_matrix;
+//	    _streamState.seqHdr.nonintra_chr_qmtx = _streamState.seqHdr.non_intra_quant_matrix;
         }
+
+	// reset default quantization matrix pointers
+	_streamState.seqHdr.intra_lum_qmtx = dflt_intra_quant_matrix;
+	_streamState.seqHdr.intra_chr_qmtx = dflt_intra_quant_matrix;
 
 	_bitBuffer.GetNextStartCode();
     } while (0);
@@ -48,10 +59,10 @@ int32_t SeqHdrParser::ParseSequenceHdr(void)
     return status;
 }
 
-int32_t SeqHdrParser::LoadQuantMatrix(uint8_t (&q)[64])
+int32_t SeqHdrParser::LoadQuantMatrix(int32_t (&q)[64])
 {
     int32_t status = 0;
-    int      i      = 0;
+    int     i      = 0;
 
     do {
 	for (i = 0; i < 64; i++) {

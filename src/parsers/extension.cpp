@@ -10,6 +10,8 @@ using namespace std;
 #include "extension.h"
 #include "picdata.h"
 
+extern const int32_t quant_mtx_sz;
+
 SeqExtParser::SeqExtParser(BitBuffer& bb, StreamState& ss) : _bitBuffer(bb), _streamState(ss)
 {
 }
@@ -163,28 +165,28 @@ int32_t SeqExtParser::ParseQuantMatrixExt(void)
     do {
 	_streamState.extData.quantMtxExt.ld_intra_quant_mtx = _bitBuffer.GetBits(1);
 	if (1 == _streamState.extData.quantMtxExt.ld_intra_quant_mtx) {
-	    for (i = 0; i < quant_matrix_extension::quant_mtx_sz; i++) {
+	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.intra_quant_mtx[i] = _bitBuffer.GetBits(8);
 	    }
 	}
 	
 	_streamState.extData.quantMtxExt.ld_non_intra_quant_mtx = _bitBuffer.GetBits(1);
 	if (1 == _streamState.extData.quantMtxExt.ld_non_intra_quant_mtx) {
-	    for (i = 0; i < quant_matrix_extension::quant_mtx_sz; i++) {
+	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.non_intra_quant_mtx[i] = _bitBuffer.GetBits(8);
 	    }
 	}
 	
 	_streamState.extData.quantMtxExt.ld_chroma_intra_quant_mtx = _bitBuffer.GetBits(1);
 	if (1 == _streamState.extData.quantMtxExt.ld_chroma_intra_quant_mtx) {
-	    for (i = 0; i < quant_matrix_extension::quant_mtx_sz; i++) {
+	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.chroma_intra_quant_mtx[i] = _bitBuffer.GetBits(8);
 	    }
 	}
 	
 	_streamState.extData.quantMtxExt.ld_chroma_non_intra_quant_mtx = _bitBuffer.GetBits(1);
 	if (1 == _streamState.extData.quantMtxExt.ld_chroma_non_intra_quant_mtx) {
-	    for (i = 0; i < quant_matrix_extension::quant_mtx_sz; i++) {
+	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.chroma_non_intra_quant_mtx[i] =
 		    _bitBuffer.GetBits(8);
 	    }

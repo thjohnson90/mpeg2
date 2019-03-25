@@ -3,6 +3,8 @@
 
 #define CHECK_PARSE(func,stat) {if (0 > ((stat) = (func))) {break;}}
 
+const int32_t quant_mtx_sz = 64;
+
 struct pack_header
 {
     pack_header();
@@ -110,8 +112,15 @@ struct sequence_header
     uint32_t constrained_params_flag     : 1;
     uint32_t load_intra_quant_matrix     : 1;
     uint32_t load_non_intra_quant_matrix : 1;
-    uint8_t  intra_quant_matrix[64];
-    uint8_t  non_intra_quant_matrix[64];
+    int32_t  intra_quant_matrix[quant_mtx_sz];
+    int32_t  non_intra_quant_matrix[quant_mtx_sz];
+
+    int32_t  W[2][8][8];
+
+    int32_t (*intra_lum_qmtx)[8];
+    int32_t (*intra_chr_qmtx)[8];
+    int32_t (*nonintra_lum_qmtx)[8];
+    int32_t (*nonintra_chr_qmtx)[8];
 };
 
 struct sequence_extension
@@ -182,17 +191,16 @@ struct sequence_scalable_extension
 struct quant_matrix_extension
 {
     quant_matrix_extension();
-    enum{quant_mtx_sz = 64};
     
     // quantization matrix extension
     uint32_t ld_intra_quant_mtx            : 1;
     uint32_t ld_non_intra_quant_mtx        : 1;
     uint32_t ld_chroma_intra_quant_mtx     : 1;
     uint32_t ld_chroma_non_intra_quant_mtx : 1;
-    uint8_t  intra_quant_mtx[quant_mtx_sz];
-    uint8_t  non_intra_quant_mtx[quant_mtx_sz];
-    uint8_t  chroma_intra_quant_mtx[quant_mtx_sz];
-    uint8_t  chroma_non_intra_quant_mtx[quant_mtx_sz];
+    int32_t  intra_quant_mtx[quant_mtx_sz];
+    int32_t  non_intra_quant_mtx[quant_mtx_sz];
+    int32_t  chroma_intra_quant_mtx[quant_mtx_sz];
+    int32_t  chroma_non_intra_quant_mtx[quant_mtx_sz];
 };
 
 struct copyright_extension
