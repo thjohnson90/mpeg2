@@ -125,12 +125,15 @@ sequence_header::sequence_header() :
     VBV_buffer_sz(0),
     constrained_params_flag(0),
     load_intra_quant_matrix(0),
-    load_non_intra_quant_matrix(0),
-    intra_lum_qmtx(nullptr),
-    intra_chr_qmtx(nullptr),
-    nonintra_lum_qmtx(nullptr),
-    nonintra_chr_qmtx(nullptr)
+    load_non_intra_quant_matrix(0)
 {
+    for (int i = 0; i < 4; i++) {
+	for (int j = 0; j < 8; j++) {
+	    for (int k = 0; k < 8; k++) {
+		W[i][j][k] = 0;
+	    }
+	}
+    }
 }
 
 sequence_extension::sequence_extension() :

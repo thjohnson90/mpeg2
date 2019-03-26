@@ -10,6 +10,7 @@ public:
     int32_t Destroy(void);
 
     int32_t ParseBlock(PictureData* picData, uint32_t blkcnt);
+    StreamState* GetStreamState(void) {return &_streamState;}
 
 #ifdef TEST
     int32_t RunGetB15Coeff(uint32_t& run, int32_t& level, bool& eob, bool& esc)

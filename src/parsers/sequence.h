@@ -5,6 +5,7 @@ class SeqHdrParser
 {
 public:
     SeqHdrParser(BitBuffer& bb, StreamState& ss);
+    
     int32_t ParseSequenceHdr(void);
     
 protected:

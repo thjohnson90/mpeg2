@@ -22,7 +22,7 @@ int32_t BlockParser::Initialize(void)
     int32_t status = 0;
 
     if (nullptr == _videoProc) {
-	_videoProc = new VideoProcessor(_streamState);
+	_videoProc = VideoProcessor::GetInstance();
 	if (nullptr == _videoProc) {
 	    status = -1;
 	}
@@ -33,8 +33,6 @@ int32_t BlockParser::Initialize(void)
 
 int32_t BlockParser::Destroy(void)
 {
-    delete _videoProc;
-    
     return 0;
 }
 
@@ -124,7 +122,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	    }
 	}
 
-	status = _videoProc->ProcessVideoBlock(picData, blkcnt);
+	status = _videoProc->ProcessVideoBlock(GetStreamState(), picData, blkcnt);
     } while (0);
 
     return status;

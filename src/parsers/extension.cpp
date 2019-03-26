@@ -9,6 +9,7 @@ using namespace std;
 #include "bitbuf.h"
 #include "extension.h"
 #include "picdata.h"
+#include "videoproc.h"
 
 extern const int32_t quant_mtx_sz;
 
@@ -163,10 +164,18 @@ int32_t SeqExtParser::ParseQuantMatrixExt(void)
     uint32_t i      = 0;
 
     do {
+	VideoProcessor* vidProc = VideoProcessor::GetInstance();
+
 	_streamState.extData.quantMtxExt.ld_intra_quant_mtx = _bitBuffer.GetBits(1);
 	if (1 == _streamState.extData.quantMtxExt.ld_intra_quant_mtx) {
 	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.intra_quant_mtx[i] = _bitBuffer.GetBits(8);
+	    }
+	    status = vidProc->GetAlternateScan(_streamState.extData.quantMtxExt.intra_quant_mtx,
+					       _streamState.seqHdr.W[0],
+					       0);
+	    if (0 > status) {
+		break;
 	    }
 	}
 	
@@ -175,12 +184,24 @@ int32_t SeqExtParser::ParseQuantMatrixExt(void)
 	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.non_intra_quant_mtx[i] = _bitBuffer.GetBits(8);
 	    }
+	    status = vidProc->GetAlternateScan(_streamState.extData.quantMtxExt.non_intra_quant_mtx,
+					       _streamState.seqHdr.W[1],
+					       0);
+	    if (0 > status) {
+		break;
+	    }
 	}
 	
 	_streamState.extData.quantMtxExt.ld_chroma_intra_quant_mtx = _bitBuffer.GetBits(1);
 	if (1 == _streamState.extData.quantMtxExt.ld_chroma_intra_quant_mtx) {
 	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.chroma_intra_quant_mtx[i] = _bitBuffer.GetBits(8);
+	    }
+	    status = vidProc->GetAlternateScan(_streamState.extData.quantMtxExt.chroma_intra_quant_mtx,
+					       _streamState.seqHdr.W[2],
+					       0);
+	    if (0 > status) {
+		break;
 	    }
 	}
 	
@@ -189,6 +210,12 @@ int32_t SeqExtParser::ParseQuantMatrixExt(void)
 	    for (i = 0; i < quant_mtx_sz; i++) {
 		_streamState.extData.quantMtxExt.chroma_non_intra_quant_mtx[i] =
 		    _bitBuffer.GetBits(8);
+	    }
+	    status = vidProc->GetAlternateScan(_streamState.extData.quantMtxExt.chroma_non_intra_quant_mtx,
+					       _streamState.seqHdr.W[3],
+					       0);
+	    if (0 > status) {
+		break;
 	    }
 	}
 

@@ -31,6 +31,8 @@ using namespace std;
 int main(int argc, char** argv)
 {
     int status = 0;
+
+    VideoProcessor* videoProcessor = VideoProcessor::GetInstance();
     
     do {
         if (2 != argc) {
@@ -71,6 +73,8 @@ int main(int argc, char** argv)
 	}
 	PictureDataMgr::GetPictureDataMgr(streamState)->ReleasePictureDataMgr();
     } while (0);
+
+    delete videoProcessor;
 
     return status;
 }

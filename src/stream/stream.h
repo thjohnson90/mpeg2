@@ -115,12 +115,7 @@ struct sequence_header
     int32_t  intra_quant_matrix[quant_mtx_sz];
     int32_t  non_intra_quant_matrix[quant_mtx_sz];
 
-    int32_t  W[2][8][8];
-
-    int32_t (*intra_lum_qmtx)[8];
-    int32_t (*intra_chr_qmtx)[8];
-    int32_t (*nonintra_lum_qmtx)[8];
-    int32_t (*nonintra_chr_qmtx)[8];
+    int32_t  W[4][8][8];
 };
 
 struct sequence_extension
