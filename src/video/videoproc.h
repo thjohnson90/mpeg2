@@ -13,7 +13,7 @@ public:
 
 private:
     int32_t DoInverseQuantization(StreamState* sState, PictureData* picData, uint32_t blkcnt);
-    int32_t DoSaturation(PictureData* picData);
+    int32_t DoSaturationAndMismatch(PictureData* picData);
 
     static VideoProcessor* _instance;
 };

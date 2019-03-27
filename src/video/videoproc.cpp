@@ -105,7 +105,7 @@ int32_t VideoProcessor::ProcessVideoBlock(StreamState* sState, PictureData* picD
 	status = DoInverseQuantization(sState, picData, blkcnt);
 	assert(-1 != status);
 
-	status = DoSaturation(picData);
+	status = DoSaturationAndMismatch(picData);
 	assert(-1 != status);
     } while (0);
 
@@ -198,17 +198,29 @@ int32_t VideoProcessor::DoInverseQuantization(StreamState* sState, PictureData* 
     return status;
 }
 
-int32_t VideoProcessor::DoSaturation(PictureData* picData)
+int32_t VideoProcessor::DoSaturationAndMismatch(PictureData* picData)
 {
     int32_t status = 0;
     int32_t v      = 0;
     int32_t u      = 0;
+    int32_t sum    = 0;
 
     do {
 	for (v = 0; v < 8; v++) {
 	    for (u = 0; u < 8; u++) {
 		picData->blkData.Fp[v][u] = picData->blkData.Fpp[v][u] > 2047 ? 2047 :
 		    picData->blkData.Fpp[v][u] < -2048 ? -2048 : picData->blkData.Fpp[v][u];
+
+		sum += picData->blkData.Fp[v][u];
+		picData->blkData.F[v][u] = picData->blkData.Fp[v][u];
+	    }
+	}
+
+	if (0 == (sum & 1)) {
+	    if (0 != (picData->blkData.F[7][7] & 1)) {
+		picData->blkData.F[7][7] = picData->blkData.Fp[7][7] - 1;
+	    } else {
+		picData->blkData.F[7][7] = picData->blkData.Fp[7][7] + 1;
 	    }
 	}
     } while (0);
