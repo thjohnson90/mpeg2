@@ -229,6 +229,7 @@ void BlockData::ResetData(void)
 	    Fpp[i][j] = 0;
 	    Fp[i][j]  = 0;
 	    F[i][j]   = 0;
+	    f[i][j]   = 0.0;
 	}
     }
 }
