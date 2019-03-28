@@ -9,6 +9,19 @@
 
 using namespace std;
 
+static const double C0   = 1.0 / sqrt(static_cast<double>(2.0));
+static const double Cn   = 1.0;
+static const double PI   = 3.14159265359;
+static const double N    = 8.0;
+static const double Nx2  = 16.0;
+static const double HALF = 0.5;
+
+static double V   = 0.0;
+static double U   = 0.0;
+static double Y   = 0.0;
+static double X   = 0.0;
+static double tmp = 0.0;
+    
 #ifdef TEST
 uint32_t inv_scan[2][8][8] {
 #else
@@ -240,29 +253,16 @@ int32_t VideoProcessor::DoInverseDCT(PictureData* picData)
     int32_t v      = 0;
     int32_t u      = 0;
 
-    const double C0   = 1.0 / sqrt(static_cast<double>(2.0));
-    const double Cn   = 1.0;
-    const double PI   = 3.14159265359;
-    const double N    = 8.0;
-    const double Nx2  = 16.0;
-    const double HALF = 0.5;
-
-    double V   = 0.0;
-    double U   = 0.0;
-    double Y   = 0.0;
-    double X   = 0.0;
-    double tmp = 0.0;
-    
     do {
 	for (y = 0; y < 8; y++) {
 	    for (x = 0; x < 8; x++) {
+		tmp = 0.0;
+		Y   = static_cast<double>(y);
+		X   = static_cast<double>(x);
 		for (v = 0; v < 8; v++) {
 		    for (u = 0; u < 8; u++) {
 			V = static_cast<double>(v);
 			U = static_cast<double>(u);
-			Y = static_cast<double>(y);
-			X = static_cast<double>(x);
-			tmp = 0.0;
 			
 			if ((0 == v) && (0 == u)) {
 			    tmp += (HALF * static_cast<double>(picData->blkData.F[v][u]) *
@@ -279,7 +279,7 @@ int32_t VideoProcessor::DoInverseDCT(PictureData* picData)
 	    }
 	}
     } while (0);
-
+	
     return status;
 }
 
