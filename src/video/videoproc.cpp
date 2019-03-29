@@ -5,6 +5,8 @@
 
 #include "stream.h"
 #include "picdata.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "videoproc.h"
 
 using namespace std;
@@ -89,24 +91,65 @@ extern const int32_t dflt_non_intra_quant_matrix[8][8] {
 
 VideoProcessor* VideoProcessor::_instance = nullptr;
 
-VideoProcessor::VideoProcessor()
+VideoProcessor::VideoProcessor() : _cmd(0)
 {
 }
 
 VideoProcessor::~VideoProcessor()
 {
-    delete this;
 }
 
 VideoProcessor* VideoProcessor::GetInstance(void)
 {
-    if (nullptr != _instance) {
+    if (nullptr == _instance) {
 	_instance = new VideoProcessor();
     }
 
     return _instance;
 }
 				     
+int32_t VideoProcessor::Initialize(void)
+{
+    _worker.Initialize(VidProcWorker, this);
+    
+    return 0;
+}
+
+int32_t VideoProcessor::Destroy(void)
+{
+    cout << "Ringing worker..." << endl;
+    _worker.Ring(Thread::parse_cmd_data_ready);
+    _bell.Listen();
+    cout << "Received " << _cmd << " from worker..." << endl;
+    cout << "Ringing worker..." << endl;
+    _worker.Ring(Thread::parse_cmd_exit);
+    _bell.Listen();
+    cout << "Received " << _cmd << " from worker..." << endl;
+    cout << "Joining worker..." << endl;
+    _worker.Join(nullptr);
+    
+    return 0;
+}
+
+void* VideoProcessor::VidProcWorker(void* arg)
+{
+    uint32_t cmd = 0;
+    
+    VideoProcessor& vidProc = *(static_cast<VideoProcessor*>(arg));
+    
+    do {
+	cout << "Worker is listening..." << endl;
+	vidProc._worker.Listen();
+	cmd = vidProc._worker.GetCmd();
+	cout << "Worker received msg: " << cmd << endl;
+	vidProc.Ring(Thread::parse_cmd_data_consumed);
+    } while (Thread::parse_cmd_exit != cmd);
+    
+    cout << "Worker is exiting..." << endl;
+
+    return arg;
+}
+
 int32_t VideoProcessor::ProcessVideoBlock(StreamState* sState, PictureData* picData, uint32_t blkcnt)
 {
     int32_t status = 0;
@@ -253,6 +296,7 @@ int32_t VideoProcessor::DoInverseDCT(PictureData* picData)
     int32_t v      = 0;
     int32_t u      = 0;
 
+#if 0
     do {
 	for (y = 0; y < 8; y++) {
 	    for (x = 0; x < 8; x++) {
@@ -279,7 +323,7 @@ int32_t VideoProcessor::DoInverseDCT(PictureData* picData)
 	    }
 	}
     } while (0);
-	
+#endif	
     return status;
 }
 

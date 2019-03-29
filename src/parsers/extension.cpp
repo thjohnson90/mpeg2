@@ -9,6 +9,8 @@ using namespace std;
 #include "bitbuf.h"
 #include "extension.h"
 #include "picdata.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "videoproc.h"
 
 extern const int32_t quant_mtx_sz;

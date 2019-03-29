@@ -16,14 +16,14 @@ using namespace std;
 #include "gop.h"
 #include "picdata.h"
 #include "motvecs.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "videoproc.h"
 #include "block.h"
 #include "macroblk.h"
 #include "slice.h"
 #include "picture.h"
 #include "picdata.h"
-#include "doorbell.h"
-#include "thread.h"
 #include "base_parser.h"
 #include "file_bitbuf.h"
 #include "buf_bitbuf.h"
@@ -43,6 +43,11 @@ int main(int argc, char** argv)
 
         cout << "Parsing file: " << argv[1] << endl;
 
+	status = videoProcessor->Initialize();
+	if (0 != status) {
+	    break;
+	}
+	
         ifstream inFile(argv[1], ios::binary);
         if (!inFile.good()) {
             status = -1;
@@ -72,6 +77,7 @@ int main(int argc, char** argv)
 	    break;
 	}
 	PictureDataMgr::GetPictureDataMgr(streamState)->ReleasePictureDataMgr();
+	videoProcessor->Destroy();
     } while (0);
 
     delete videoProcessor;

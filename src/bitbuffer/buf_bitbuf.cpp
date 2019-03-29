@@ -13,13 +13,13 @@
 #include "gop.h"
 #include "picdata.h"
 #include "motvecs.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "videoproc.h"
 #include "block.h"
 #include "macroblk.h"
 #include "slice.h"
 #include "picture.h"
-#include "doorbell.h"
-#include "thread.h"
 #include "base_parser.h"
 
 using namespace std;

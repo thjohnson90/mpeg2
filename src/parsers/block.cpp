@@ -7,6 +7,8 @@ using namespace std;
 #include "stream.h"
 #include "bitbuf.h"
 #include "picdata.h"
+#include "doorbell.h"
+#include "thread.h"
 #include "videoproc.h"
 #include "block.h"
 
