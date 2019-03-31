@@ -14,14 +14,6 @@ public:
     int32_t GetCmd(void) {return _cmd;}
     int32_t Join(void** retval);
     
-    enum {
-	parse_cmd_null,
-	parse_cmd_data_ready,
-	parse_cmd_data_consumed,
-	parse_cmd_seq_end_received,
-	parse_cmd_exit
-    };
-    
 private:
     Doorbell  _bell;
     pthread_t _thrdId;

@@ -2,11 +2,13 @@
 #include <iostream>
 #include <assert.h>
 #include <math.h>
+#include <pthread.h>
 
 #include "stream.h"
 #include "picdata.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
 #include "videoproc.h"
 
 using namespace std;
@@ -91,8 +93,13 @@ extern const int32_t dflt_non_intra_quant_matrix[8][8] {
 
 VideoProcessor* VideoProcessor::_instance = nullptr;
 
-VideoProcessor::VideoProcessor() : _cmd(0)
+VideoProcessor::VideoProcessor()
 {
+    int32_t i = 0;
+
+    for (i = 0; i < NUM_HW_THREADS; i++) {
+	_cmd[i] = 0;
+    }
 }
 
 VideoProcessor::~VideoProcessor()
@@ -107,45 +114,81 @@ VideoProcessor* VideoProcessor::GetInstance(void)
 
     return _instance;
 }
-				     
+
 int32_t VideoProcessor::Initialize(void)
 {
-    _worker.Initialize(VidProcWorker, this);
+    int32_t status = 0;
+    int32_t i      = 0;
+    int32_t j      = 0;
+
+    for (i = 0; i < NUM_HW_THREADS; i++) {
+	_thrdArgs[i].pThis = this;
+	_thrdArgs[i].id    = i;
+
+	status = _worker[i].Initialize(VidProcWorker, &_thrdArgs[i]);
+	if (0 != status) {
+	    for (j = 0; j < i; j++) {
+		_worker[j].Ring(common_cmd::exit);
+		_worker[j].Join(nullptr);
+	    }
+	    break;
+	}
+    }
     
-    return 0;
+    return status;
 }
 
 int32_t VideoProcessor::Destroy(void)
 {
-    cout << "Ringing worker..." << endl;
-    _worker.Ring(Thread::parse_cmd_data_ready);
-    _bell.Listen();
-    cout << "Received " << _cmd << " from worker..." << endl;
-    cout << "Ringing worker..." << endl;
-    _worker.Ring(Thread::parse_cmd_exit);
-    _bell.Listen();
-    cout << "Received " << _cmd << " from worker..." << endl;
-    cout << "Joining worker..." << endl;
-    _worker.Join(nullptr);
+    int32_t status = 0;
+    int32_t i      = 0;
+
+    for (i = 0; i < NUM_HW_THREADS; i++) {
+	_bell[i].Listen();
+	assert(idct_cmd::processing_complete == _cmd[i]);
+	status = _worker[i].Ring(common_cmd::exit);
+	assert(0 == status);
+	status = _worker[i].Join(nullptr);
+	assert(0 == status);
+    }
     
-    return 0;
+    return status;
 }
 
 void* VideoProcessor::VidProcWorker(void* arg)
 {
-    uint32_t cmd = 0;
-    
-    VideoProcessor& vidProc = *(static_cast<VideoProcessor*>(arg));
+    uint32_t     cmd     = 0;
+    uint32_t     id      = 0;
+    cpu_set_t    set     = {0};
+    pthread_t    tid     = 0;
+    PictureData* picData = nullptr;
+    StreamState  ss;
+
+    VideoProcessor& vidProc = *(static_cast<_ThrdArgs*>(arg)->pThis);
+    id = static_cast<_ThrdArgs*>(arg)->id;
+
+    tid = pthread_self();
+    CPU_ZERO(&set);
+    CPU_SET(id, &set);
+    pthread_setaffinity_np(tid, sizeof(set), &set);
     
     do {
-	cout << "Worker is listening..." << endl;
-	vidProc._worker.Listen();
-	cmd = vidProc._worker.GetCmd();
-	cout << "Worker received msg: " << cmd << endl;
-	vidProc.Ring(Thread::parse_cmd_data_consumed);
-    } while (Thread::parse_cmd_exit != cmd);
-    
-    cout << "Worker is exiting..." << endl;
+	vidProc._worker[id].Listen();
+	cmd = vidProc._worker[id].GetCmd();
+	if (common_cmd::exit != cmd) {
+	    // this is a hack - the StreamState object referenced here is meaningless
+	    // but by the time this code is executed the PictureDataMgr was already instantiated
+	    // this is really not correct code though
+	    PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(ss);
+	    assert(nullptr != picDataMgr);
+
+	    picData = picDataMgr->GetCurrentBuffer();
+	    assert(nullptr != picData);
+	    
+	    vidProc.DoInverseDCT(picData, cmd);
+	    vidProc.Ring(id, idct_cmd::processing_complete);  // alert master thread
+	}
+    } while (common_cmd::exit != cmd);
 
     return arg;
 }
@@ -162,10 +205,10 @@ int32_t VideoProcessor::ProcessVideoBlock(StreamState* sState, PictureData* picD
 	status = DoInverseQuantization(sState, picData, blkcnt);
 	assert(-1 != status);
 
-	status = DoSaturationAndMismatch(picData);
+	status = DoSaturationAndMismatch(picData, blkcnt);
 	assert(-1 != status);
 
-	status = DoInverseDCT(picData);
+	status = ScheduleInverseDCTWork(picData, blkcnt);
 	assert(-1 != status);
     } while (0);
 
@@ -258,7 +301,7 @@ int32_t VideoProcessor::DoInverseQuantization(StreamState* sState, PictureData* 
     return status;
 }
 
-int32_t VideoProcessor::DoSaturationAndMismatch(PictureData* picData)
+int32_t VideoProcessor::DoSaturationAndMismatch(PictureData* picData, uint32_t blkcnt)
 {
     int32_t status = 0;
     int32_t v      = 0;
@@ -272,15 +315,15 @@ int32_t VideoProcessor::DoSaturationAndMismatch(PictureData* picData)
 		    picData->blkData.Fpp[v][u] < -2048 ? -2048 : picData->blkData.Fpp[v][u];
 
 		sum += picData->blkData.Fp[v][u];
-		picData->blkData.F[v][u] = picData->blkData.Fp[v][u];
+		picData->blkData.F[blkcnt][v][u] = picData->blkData.Fp[v][u];
 	    }
 	}
 
 	if (0 == (sum & 1)) {
-	    if (0 != (picData->blkData.F[7][7] & 1)) {
-		picData->blkData.F[7][7] = picData->blkData.Fp[7][7] - 1;
+	    if (0 != (picData->blkData.F[blkcnt][7][7] & 1)) {
+		picData->blkData.F[blkcnt][7][7] = picData->blkData.Fp[7][7] - 1;
 	    } else {
-		picData->blkData.F[7][7] = picData->blkData.Fp[7][7] + 1;
+		picData->blkData.F[blkcnt][7][7] = picData->blkData.Fp[7][7] + 1;
 	    }
 	}
     } while (0);
@@ -288,7 +331,7 @@ int32_t VideoProcessor::DoSaturationAndMismatch(PictureData* picData)
     return status;
 }
 
-int32_t VideoProcessor::DoInverseDCT(PictureData* picData)
+int32_t VideoProcessor::DoInverseDCT(PictureData* picData, uint32_t blkcnt)
 {
     int32_t status = 0;
     int32_t x      = 0;
@@ -296,7 +339,6 @@ int32_t VideoProcessor::DoInverseDCT(PictureData* picData)
     int32_t v      = 0;
     int32_t u      = 0;
 
-#if 0
     do {
 	for (y = 0; y < 8; y++) {
 	    for (x = 0; x < 8; x++) {
@@ -309,21 +351,96 @@ int32_t VideoProcessor::DoInverseDCT(PictureData* picData)
 			U = static_cast<double>(u);
 			
 			if ((0 == v) && (0 == u)) {
-			    tmp += (HALF * static_cast<double>(picData->blkData.F[v][u]) *
+			    tmp += (HALF * static_cast<double>(picData->blkData.F[blkcnt][v][u]) *
 				    cos(((2.0 * Y + 1.0) * V * PI) / Nx2) *
 				    cos(((2.0 * X + 1.0) * U * PI) / Nx2));
 			} else {
-			    tmp += (static_cast<double>(picData->blkData.F[v][u]) *
+			    tmp += (static_cast<double>(picData->blkData.F[blkcnt][v][u]) *
 				    cos(((2.0 * Y + 1.0) * V * PI) / Nx2) *
 				    cos(((2.0 * X + 1.0) * U * PI) / Nx2));
 			}
 		    }
 		}
-		picData->blkData.f[y][x] = tmp * (2.0 / N);
+		picData->blkData.f[blkcnt][y][x] = tmp * (2.0 / N);
 	    }
 	}
     } while (0);
-#endif	
+    
     return status;
 }
 
+int32_t VideoProcessor::ScheduleInverseDCTWork(PictureData* picData, uint32_t blkcnt)
+{
+    int32_t  status = 0;
+    uint32_t i      = 0;
+    
+    static uint32_t scheduled_blocks = 0;
+    static uint32_t completed_blocks = 0;
+    static uint32_t thread_mask      = 0;
+    
+    assert(scheduled_blocks <= NUM_HW_THREADS);
+    assert((completed_blocks + scheduled_blocks) <= picData->macroblkData.block_count);
+
+    // only one block processing job get scheduled at a time
+    
+    do {
+	if (scheduled_blocks < NUM_HW_THREADS) {
+	    // we have HW thread capacity
+	    if ((completed_blocks + scheduled_blocks) < picData->macroblkData.block_count) {
+		// there is still a block in the current macroblock to process
+		// schedule a thread now
+		for (i = 0; i < NUM_HW_THREADS; i++) {
+		    if (0 == (thread_mask & (1 << i))) {
+			thread_mask |= (1 << i);
+			break;
+		    }
+		}
+		_worker[i].Ring(blkcnt);
+		scheduled_blocks++;
+	    }
+
+	    if ((completed_blocks + scheduled_blocks) == picData->macroblkData.block_count) {
+		// all blocks are either complete or scheduled for current macroblock
+		// wait for processing to complete and make sure worker threads are halted
+		// before proceeding
+		for (i = 0; i < NUM_HW_THREADS; i++) {
+		    if (1 == ((thread_mask >> i) & 1)) {
+			_bell[i].Listen();
+			assert(_cmd[i] == idct_cmd::processing_complete);
+			thread_mask &= (~(1<< i));
+			completed_blocks++;
+			scheduled_blocks--;
+		    }
+		}
+		assert(picData->macroblkData.block_count == completed_blocks);
+		assert(0 == scheduled_blocks);
+		assert(0 == thread_mask);
+		
+		// reset completed and schedule block counts
+		completed_blocks = 0;
+		scheduled_blocks = 0;
+	    }
+	    
+	    // there is at least one block in the current macroblock to process
+	    // break now to allow the parser to parse the next block
+	    break;
+	} else {
+	    // scheduled_blocks == NUM_HW_THREADS
+	    // wait for one thread to complete - loop - which should allow an additional
+	    // workload to schedule
+
+	    for (i = 0; i < NUM_HW_THREADS; i++) {
+		if (1 == (thread_mask & (1 << i))) {
+		    _bell[i].Listen();
+		    assert(_cmd[i] == idct_cmd::processing_complete);
+		    thread_mask &= (~(1 << i));
+		    completed_blocks++;
+		    scheduled_blocks--;
+		    break;
+		}
+	    }
+	}
+    } while (scheduled_blocks < NUM_HW_THREADS);
+    
+    return status;
+}

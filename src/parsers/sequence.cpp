@@ -8,6 +8,7 @@ using namespace std;
 #include "picdata.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
 #include "videoproc.h"
 #include "sequence.h"
 

@@ -9,6 +9,7 @@ using namespace std;
 #include "picdata.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
 #include "videoproc.h"
 #include "block.h"
 
@@ -129,7 +130,7 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 		// no pattern_code, so no coefficient data
 		for (int v = 0; v < 8; v++) {
 		    for (int u = 0; u < 8; u++) {
-			picData->blkData.f[v][u] = 0;
+			picData->blkData.f[blkcnt][v][u] = 0.0;
 			// need to complete motion compensation on this data
 		    }
 		}

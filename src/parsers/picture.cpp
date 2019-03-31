@@ -17,6 +17,7 @@ using namespace std;
 #include "motvecs.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
 #include "videoproc.h"
 #include "block.h"
 #include "macroblk.h"

@@ -18,6 +18,7 @@ using namespace std;
 #include "motvecs.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
 #include "videoproc.h"
 #include "block.h"
 #include "macroblk.h"
@@ -28,6 +29,7 @@ using namespace std;
 #include "base_parser.h"
 #include "file_bitbuf.h"
 #include "buf_bitbuf.h"
+#include "thrdcmds.h"
 
 BaseParser::BaseParser(FileBitBuffer& fbb, BufBitBuffer&bbb, StreamState& ss) :
     _fbitBuffer(fbb),
@@ -42,7 +44,7 @@ BaseParser::BaseParser(FileBitBuffer& fbb, BufBitBuffer&bbb, StreamState& ss) :
     _userDataParser(nullptr),
     _gopParser(nullptr),
     _picParser(nullptr),
-    _cmd(Thread::parse_cmd_null)
+    _cmd(common_cmd::null)
 {
 }
 
@@ -56,10 +58,10 @@ void* BaseParser::ParserWorker(void* arg)
     BaseParser& parser = *static_cast<BaseParser*>(arg);
     
     parser._worker.Listen();
-    assert(Thread::parse_cmd_data_ready == parser._worker.GetCmd());
+    assert(parse_cmd::data_ready == parser._worker.GetCmd());
     parser.ParseMPEG2Stream();
 
-    parser.Ring(Thread::parse_cmd_seq_end_received);
+    parser.Ring(parse_cmd::seq_end_received);
 
     return arg;
 }
@@ -170,11 +172,10 @@ uint32_t BaseParser::ParseVideoSequence(void)
 		uint8_t* pbuf = _bbitBuffer.GetEmptyBuffer(_streamState.pesHdr.packet_len);
 		if (nullptr != pbuf) {
 		    _fbitBuffer.GetBytes(pbuf, _streamState.pesHdr.packet_len);
-		    _worker.Ring(Thread::parse_cmd_data_ready);
+		    _worker.Ring(parse_cmd::data_ready);
 		    _bell.Listen();
-		    assert(
-			Thread::parse_cmd_data_consumed == _cmd ||
-			Thread::parse_cmd_seq_end_received == _cmd);
+		    assert(parse_cmd::data_consumed == _cmd ||
+			   parse_cmd::seq_end_received == _cmd);
 		}
 	    }
             break;

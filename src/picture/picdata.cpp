@@ -204,6 +204,7 @@ void BlockData::ResetData(void)
 {
     int32_t i = 0;
     int32_t j = 0;
+    int32_t k = 0;
     
     dct_dc_size_luminance     = 0;
     dct_dc_differential_lum   = 0;
@@ -222,14 +223,21 @@ void BlockData::ResetData(void)
     for (i = 0; i < 64; i++) {
 	QFS[i] = 0;
     }
-
+    
     for (i = 0; i < 8; i++) {
 	for (j = 0; j < 8; j++) {
 	    QF[i][j]  = 0;
 	    Fpp[i][j] = 0;
 	    Fp[i][j]  = 0;
-	    F[i][j]   = 0;
-	    f[i][j]   = 0.0;
+	}
+    }
+    
+    for (k = 0; k < 12; k++) {
+	for (i = 0; i < 8; i++) {
+	    for (j = 0; j < 8; j++) {
+		F[k][i][j]   = 0;
+		f[k][i][j]   = 0.0;
+	    }
 	}
     }
 }

@@ -11,6 +11,7 @@ using namespace std;
 #include "picdata.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
 #include "videoproc.h"
 
 extern const int32_t quant_mtx_sz;

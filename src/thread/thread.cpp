@@ -2,14 +2,19 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include "stream.h"
+#include "picdata.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
+#include "videoproc.h"
+#include "thrdcmds.h"
 
 using namespace std;
 
 Thread::Thread() :
     _thrdId(0),
-    _cmd(parse_cmd_null),
+    _cmd(common_cmd::null),
     _workFunc(nullptr)
 {
 }

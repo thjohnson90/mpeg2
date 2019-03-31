@@ -140,8 +140,8 @@ struct BlockData {
     int32_t QF[8][8];
     int32_t Fpp[8][8];
     int32_t Fp[8][8];
-    int32_t F[8][8];
-    double  f[8][8];
+    int32_t F[12][8][8];
+    double  f[12][8][8];
 };
 
 struct PictureData

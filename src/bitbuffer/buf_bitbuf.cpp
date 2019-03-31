@@ -15,12 +15,14 @@
 #include "motvecs.h"
 #include "doorbell.h"
 #include "thread.h"
+#include "thrdcmds.h"
 #include "videoproc.h"
 #include "block.h"
 #include "macroblk.h"
 #include "slice.h"
 #include "picture.h"
 #include "base_parser.h"
+#include "thrdcmds.h"
 
 using namespace std;
 
@@ -149,11 +151,11 @@ int32_t BufBitBuffer::FillBitBuffer()
     do {
 	if (0 == (_size - _offset)) {
 	    // buffer is empty
-	    _bparser->Ring(Thread::parse_cmd_data_consumed);
+	    _bparser->Ring(parse_cmd::data_consumed);
 	    
 	    // wait for more_data message
 	    _bparser->WorkerListen();
-	    if (Thread::parse_cmd_exit == _bparser->GetWorkerCmd()) {
+	    if (common_cmd::exit == _bparser->GetWorkerCmd()) {
 		status = -1;
 		break;
 	    }
