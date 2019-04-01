@@ -108,6 +108,21 @@ int32_t MacroblkParser::ParseMacroblkData(void)
 	picData->macroblkData.mb_col =
 	    picData->macroblkData.macroblock_address % picData->macroblkData.mb_width;
 
+	VideoProcessor* videoProc = VideoProcessor::GetInstance();
+	assert(nullptr != videoProc);
+	if (1 < picData->macroblkData.macroblock_address_inc) {
+	    // one or more macroblocks is skipped
+	    // for each skipped macroblock, set f[y][x] = 0 for all x, y
+	    // per above then move on with motion compensation and generation of d[][] values
+	    // per Fig 7-1
+	    
+	    // loop for all skipped macroblocks
+	    // assuming that after skipping processed macroblocks must process this macroblock
+	    for (int i = 1; i < picData->macroblkData.macroblock_address_inc; i++) {
+		status = videoProc->ProcessSkippedMacroblock(picData);
+	    }
+	}
+	
 	status = GetMacroblkModes(picData);
 	assert(-1 != status);
 

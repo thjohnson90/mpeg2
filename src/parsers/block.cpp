@@ -125,22 +125,17 @@ int32_t BlockParser::ParseBlock(PictureData* picData, uint32_t blkcnt)
 	    }
 	}
 
-	if ((0 == picData->blkData.pattern_code[blkcnt]) || (1 < picData->macroblkData.macroblock_address_inc)) {
-	    if (0 == picData->blkData.pattern_code[blkcnt]) {
-		// no pattern_code, so no coefficient data
-		for (int v = 0; v < 8; v++) {
-		    for (int u = 0; u < 8; u++) {
-			picData->blkData.f[blkcnt][v][u] = 0.0;
-			// need to complete motion compensation on this data
-		    }
+	if (0 == picData->blkData.pattern_code[blkcnt]) {
+	    // no pattern_code, so no coefficient data
+	    for (int v = 0; v < 8; v++) {
+		for (int u = 0; u < 8; u++) {
+		    picData->blkData.f[blkcnt][v][u] = 0.0;
 		}
 	    }
-
-	    if (1 < picData->macroblkData.macroblock_address_inc) {
-		// one or more macroblocks is skipped
-		// for each skipped macroblock, set f[y][x] = 0 for all x, y
-		// per above then move on with motion compensation and generation of d[][] values
-		// per Fig 7-1
+	    
+	    // if this is the last block of the macroblock then do motion comp
+	    if (picData->macroblkData.block_count == (blkcnt + 1)) {
+		_videoProc->DoMotionCompensation(picData);
 	    }
 	} else {
 	    status = _videoProc->ProcessVideoBlock(GetStreamState(), picData, blkcnt);

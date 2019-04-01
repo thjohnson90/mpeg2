@@ -93,7 +93,7 @@ extern const int32_t dflt_non_intra_quant_matrix[8][8] {
 
 VideoProcessor* VideoProcessor::_instance = nullptr;
 
-VideoProcessor::VideoProcessor()
+VideoProcessor::VideoProcessor() : _streamState(nullptr)
 {
     int32_t i = 0;
 
@@ -115,11 +115,13 @@ VideoProcessor* VideoProcessor::GetInstance(void)
     return _instance;
 }
 
-int32_t VideoProcessor::Initialize(void)
+int32_t VideoProcessor::Initialize(StreamState* ss)
 {
     int32_t status = 0;
     int32_t i      = 0;
     int32_t j      = 0;
+
+    _streamState = ss;
 
     for (i = 0; i < NUM_HW_THREADS; i++) {
 	_thrdArgs[i].pThis = this;
@@ -162,7 +164,6 @@ void* VideoProcessor::VidProcWorker(void* arg)
     cpu_set_t    set     = {0};
     pthread_t    tid     = 0;
     PictureData* picData = nullptr;
-    StreamState  ss;
 
     VideoProcessor& vidProc = *(static_cast<_ThrdArgs*>(arg)->pThis);
     id = static_cast<_ThrdArgs*>(arg)->id;
@@ -176,10 +177,7 @@ void* VideoProcessor::VidProcWorker(void* arg)
 	vidProc._worker[id].Listen();
 	cmd = vidProc._worker[id].GetCmd();
 	if (common_cmd::exit != cmd) {
-	    // this is a hack - the StreamState object referenced here is meaningless
-	    // but by the time this code is executed the PictureDataMgr was already instantiated
-	    // this is really not correct code though
-	    PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(ss);
+	    PictureDataMgr* picDataMgr = PictureDataMgr::GetPictureDataMgr(*(vidProc._streamState));
 	    assert(nullptr != picDataMgr);
 
 	    picData = picDataMgr->GetCurrentBuffer();
@@ -210,8 +208,23 @@ int32_t VideoProcessor::ProcessVideoBlock(StreamState* sState, PictureData* picD
 
 	status = ScheduleInverseDCTWork(picData, blkcnt);
 	assert(-1 != status);
+
+	status = DoMotionCompensation(picData);
+	assert(-1 != status);
     } while (0);
 
+    return status;
+}
+
+int32_t VideoProcessor::ProcessSkippedMacroblock(PictureData* picData)
+{
+    int32_t status = 0;
+    
+    // placeholder/reminder function until I figure out what the hell to do here
+    // loop through all blocks of each skipped macroblock, initialize f[][][] data to zero,
+    // and then call motion comp function apply any motion comp as necessary
+    status = DoMotionCompensation(picData);
+    
     return status;
 }
 
@@ -367,6 +380,11 @@ int32_t VideoProcessor::DoInverseDCT(PictureData* picData, uint32_t blkcnt)
     } while (0);
     
     return status;
+}
+
+int32_t VideoProcessor::DoMotionCompensation(PictureData* picData)
+{
+    return 0;
 }
 
 int32_t VideoProcessor::ScheduleInverseDCTWork(PictureData* picData, uint32_t blkcnt)

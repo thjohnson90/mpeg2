@@ -44,7 +44,8 @@ int main(int argc, char** argv)
 
         cout << "Parsing file: " << argv[1] << endl;
 
-	status = videoProcessor->Initialize();
+ 	StreamState streamState;
+	status = videoProcessor->Initialize(&streamState);
 	if (0 != status) {
 	    break;
 	}
@@ -62,7 +63,6 @@ int main(int argc, char** argv)
 
 	cout << "File is " << sz << "bytes long." << endl;
 
- 	StreamState streamState;
 	FileBitBuffer fileBitBuf(inFile);
 	BufBitBuffer  bufBitBuf;
 
